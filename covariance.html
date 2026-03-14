@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCA — Covariance Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* covariance.html — unique styles only */
+
+    /* Heatmap table */
+    .cov-wrap { overflow-x: auto; margin-bottom: 2.5rem; }
+
+    .cov-table {
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .cov-table th {
+      background: var(--bg-3);
+      color: var(--text-muted);
+      padding: 0.55rem 0.9rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-strong);
+      border-right: 1px solid var(--border);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+    }
+
+    .cov-table th:first-child {
+      text-align: left;
+      border-right: 1px solid var(--border-strong);
+      min-width: 100px;
+    }
+
+    .cov-table th:last-child { border-right: none; }
+
+    .cov-table td {
+      padding: 0.5rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      text-align: right;
+      cursor: pointer;
+      transition: filter 0.1s;
+      position: relative;
+    }
+
+    .cov-table td:first-child {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: left;
+      background: var(--bg-3);
+      border-right: 1px solid var(--border-strong);
+      cursor: default;
+    }
+
+    .cov-table td:last-child { border-right: none; }
+    .cov-table tr:last-child td { border-bottom: none; }
+    .cov-table td:hover { filter: brightness(1.3); }
+    .cov-table td.diagonal { outline: 1.5px solid rgba(108,99,255,0.5); outline-offset: -1.5px; }
+
+    /* Tooltip */
+    .cov-tooltip {
+      position: fixed;
+      background: var(--bg-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 100;
+      max-width: 240px;
+      line-height: 1.6;
+    }
+
+    .cov-tooltip.visible { opacity: 1; }
+    .cov-tooltip .tt-vars { color: var(--accent); margin-bottom: 4px; font-size: 11px; }
+    .cov-tooltip .tt-val  { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+    .cov-tooltip .tt-interp { color: var(--text-muted); font-size: 11px; }
+
+    /* Legend */
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-bar {
+      flex: 1;
+      max-width: 200px;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #6dbfff, var(--bg-3), #ff9e6d);
+    }
+
+    /* Correlation note */
+    .corr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+
+    .corr-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+    }
+
+    .corr-pair { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .corr-val  { font-size: 1.1rem; font-weight: 700; font-family: var(--mono); }
+    .corr-bar-wrap { margin-top: 6px; height: 3px; background: var(--bg-3); border-radius: 2px; overflow: hidden; }
+    .corr-bar { height: 100%; border-radius: 2px; }
+
+    .corr-val.strong-pos { color: #ff9e6d; }
+    .corr-val.strong-neg { color: #6dbfff; }
+    .corr-val.weak       { color: var(--text-muted); }
+    .corr-val.moderate   { color: var(--text); }
+
+    /* Full matrix display toggle */
+    .matrix-display {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+    }
+
+    .matrix-display-header {
+      padding: 0.75rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sym-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 2px;
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    .matrix-display-body {
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+    }
+
+    .matrix-display-body pre {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre;
+      margin: 0;
+    }
+
+    .mx-row-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    /* What this means section */
+    .interp-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+
+    .interp-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.1rem;
+    }
+
+    .interp-swatch {
+      width: 28px;
+      height: 6px;
+      border-radius: 3px;
+      margin-bottom: 0.6rem;
+    }
+
+    .interp-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+    .interp-body  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; font-family: var(--mono); }
+
+    @media (max-width: 640px) {
+      .interp-row { grid-template-columns: 1fr; }
+      .corr-grid  { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">Step 4 of 5</div>
+    <h1>Covariance <span>matrix</span></h1>
+    <p class="subtitle">How your variables move together — the foundation PCA builds on.</p>
+  </header>
+
+  <nav class="steps-nav">
+    <div class="step-item done"><div class="step-num">✓</div> Upload</div>
+    <div class="step-item done"><div class="step-num">✓</div> Data matrix</div>
+    <div class="step-item done"><div class="step-num">✓</div> Standardise</div>
+    <div class="step-item active"><div class="step-num">4</div> Covariance</div>
+    <div class="step-item"><div class="step-num">5</div> Eigen decomp</div>
+  </nav>
+
+  <div id="main-content">
+    <div class="no-data">No data found — <a href="index.html" style="color:var(--accent)">go back and upload a CSV</a></div>
+  </div>
+
+  <div class="cov-tooltip" id="tooltip"></div>
+
+</div>
+<script>
+  const stored = localStorage.getItem('pca_Z');
+  if (stored) {
+    const { headers, Z, stats } = JSON.parse(stored);
+    renderPage(headers, Z, stats);
+  }
+
+  function dot(a, b) { return a.reduce((s, v, i) => s + v * b[i], 0); }
+
+  function computeCovariance(Z, headers) {
+    const n = Z.length, p = headers.length;
+    const C = [];
+    for (let i = 0; i < p; i++) {
+      C[i] = [];
+      const ci = Z.map(r => r[i]);
+      for (let j = 0; j < p; j++) {
+        const cj = Z.map(r => r[j]);
+        C[i][j] = dot(ci, cj) / (n - 1);
+      }
+    }
+    return C;
+  }
+
+  function fmt(v, d = 4) { return isNaN(v) ? '—' : v.toFixed(d); }
+
+  function heatColor(v, min, max) {
+    // negative → blue, zero → bg, positive → orange
+    if (v >= 0) {
+      const t = Math.min(1, v / Math.max(max, 0.0001));
+      const r = Math.round(30  + t * (255 - 30));
+      const g = Math.round(25  + t * (158 - 25));
+      const b = Math.round(31  + t * (109 - 31));
+      return `rgba(${r},${g},${b},${0.15 + t * 0.55})`;
+    } else {
+      const t = Math.min(1, Math.abs(v) / Math.max(Math.abs(min), 0.0001));
+      const r = Math.round(30  + t * (109 - 30));
+      const g = Math.round(25  + t * (191 - 25));
+      const b = Math.round(31  + t * (255 - 31));
+      return `rgba(${r},${g},${b},${0.15 + t * 0.55})`;
+    }
+  }
+
+  function textColorForBg(v, min, max) {
+    const intensity = Math.max(Math.abs(v) / Math.max(Math.abs(min), max, 0.0001));
+    return intensity > 0.4 ? 'var(--text)' : 'var(--text-muted)';
+  }
+
+  function interpret(v, nameA, nameB) {
+    const av = Math.abs(v);
+    if (nameA === nameB) return `Variance of ${nameA} = ${fmt(v, 4)}`;
+    if (av < 0.1)  return `${nameA} and ${nameB} are essentially uncorrelated`;
+    if (av < 0.4)  return `Weak ${v > 0 ? 'positive' : 'negative'} relationship`;
+    if (av < 0.7)  return `Moderate ${v > 0 ? 'positive' : 'negative'} covariance`;
+    return `Strong ${v > 0 ? 'positive' : 'negative'} covariance`;
+  }
+
+  function appendHTML(parent, html) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    while (d.firstChild) parent.appendChild(d.firstChild);
+  }
+
+  function renderPage(headers, Z, stats) {
+    const C = computeCovariance(Z, headers);
+    const p = headers.length;
+    const n = Z.length;
+
+    // Save for eigen step
+    localStorage.setItem('pca_C', JSON.stringify({ headers, C, Z, stats }));
+
+    const content = document.getElementById('main-content');
+    content.innerHTML = '';
+    content.classList.add('fade-in');
+
+    // ── Explainer ──
+    appendHTML(content, `
+      <div class="explainer">
+        <h2>What is a covariance matrix?</h2>
+        <p>Each entry C<sub>ij</sub> measures how much variables <em>i</em> and <em>j</em> vary together. If large values of variable <em>i</em> tend to appear with large values of variable <em>j</em>, their covariance is positive. If they move in opposite directions, it's negative.</p>
+        <div class="math">C = (1 / (n−1)) · Zᵀ Z &nbsp;&nbsp;&nbsp; shape: ${p}×${p}</div>
+        <p>Because we standardised first, the diagonal entries (variance of each variable) are all exactly 1. The off-diagonal entries are the correlations between pairs of variables — the same as Pearson's r.</p>
+        <p>PCA will decompose this matrix into eigenvectors and eigenvalues. But first — look at it.</p>
+      </div>
+    `);
+
+    // ── Heatmap ──
+    appendHTML(content, `<div class="section-title">Σ — covariance matrix (interactive heatmap)</div>`);
+
+    // find range for color scaling (exclude diagonal for off-diagonal scaling)
+    let offMin = Infinity, offMax = -Infinity;
+    for (let i = 0; i < p; i++)
+      for (let j = 0; j < p; j++)
+        if (i !== j) { offMin = Math.min(offMin, C[i][j]); offMax = Math.max(offMax, C[i][j]); }
+
+    const heatWrap = document.createElement('div');
+    heatWrap.className = 'cov-wrap';
+
+    const table = document.createElement('table');
+    table.className = 'cov-table';
+
+    // Header row
+    let thead = '<thead><tr><th></th>';
+    headers.forEach(h => { thead += `<th>${h}</th>`; });
+    thead += '</tr></thead>';
+    table.innerHTML = thead;
+
+    const tbody = document.createElement('tbody');
+    for (let i = 0; i < p; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${headers[i]}</td>`;
+      for (let j = 0; j < p; j++) {
+        const v = C[i][j];
+        const isDiag = i === j;
+        const bg = isDiag
+          ? 'rgba(108,99,255,0.18)'
+          : heatColor(v, offMin, offMax);
+        const td = document.createElement('td');
+        td.style.background = bg;
+        td.style.color = 'var(--text)';
+        td.textContent = fmt(v, 3);
+        if (isDiag) td.classList.add('diagonal');
+        td.dataset.i = i;
+        td.dataset.j = j;
+        td.dataset.v = v;
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    heatWrap.appendChild(table);
+    content.appendChild(heatWrap);
+
+    // Legend
+    appendHTML(content, `
+      <div class="heatmap-legend">
+        <span>negative covariance</span>
+        <div class="legend-bar"></div>
+        <span>positive covariance</span>
+        &nbsp;·&nbsp;
+        <span style="color:var(--accent)">■</span>
+        <span>diagonal = variance (always 1 after standardisation)</span>
+      </div>
+    `);
+
+    // Tooltip logic
+    const tooltip = document.getElementById('tooltip');
+    table.addEventListener('mousemove', e => {
+      const td = e.target.closest('td[data-v]');
+      if (!td) { tooltip.classList.remove('visible'); return; }
+      const i = +td.dataset.i, j = +td.dataset.j, v = +td.dataset.v;
+      tooltip.innerHTML = `
+        <div class="tt-vars">${headers[i]} × ${headers[j]}</div>
+        <div class="tt-val">${fmt(v, 6)}</div>
+        <div class="tt-interp">${interpret(v, headers[i], headers[j])}</div>
+      `;
+      tooltip.classList.add('visible');
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY - 10) + 'px';
+    });
+    table.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+
+    // ── Interpretation guide ──
+    appendHTML(content, `<div class="section-title">How to read each cell</div>`);
+    const interp = document.createElement('div');
+    interp.className = 'interp-row';
+    interp.innerHTML = `
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:#6dbfff"></div>
+        <div class="interp-title">Negative covariance</div>
+        <div class="interp-body">When one variable goes up, the other tends to go down. They move in opposite directions across observations.</div>
+      </div>
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:var(--bg-3);border:1px solid var(--border)"></div>
+        <div class="interp-title">Near-zero covariance</div>
+        <div class="interp-body">The two variables are roughly independent — knowing one tells you little about the other.</div>
+      </div>
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:#ff9e6d"></div>
+        <div class="interp-title">Positive covariance</div>
+        <div class="interp-body">When one variable goes up, the other tends to also go up. They carry overlapping information.</div>
+      </div>
+    `;
+    content.appendChild(interp);
+
+    // ── Notable pairs ──
+    const pairs = [];
+    for (let i = 0; i < p; i++)
+      for (let j = i + 1; j < p; j++)
+        pairs.push({ i, j, v: C[i][j], abs: Math.abs(C[i][j]) });
+    pairs.sort((a, b) => b.abs - a.abs);
+    const topPairs = pairs.slice(0, Math.min(6, pairs.length));
+
+    if (topPairs.length > 0) {
+      appendHTML(content, `<div class="section-title">Strongest relationships in your data</div>`);
+      const corrGrid = document.createElement('div');
+      corrGrid.className = 'corr-grid';
+
+      topPairs.forEach(({ i, j, v }) => {
+        const absV = Math.abs(v);
+        let cls = 'weak', barColor = 'var(--text-muted)';
+        if (absV > 0.7) { cls = v > 0 ? 'strong-pos' : 'strong-neg'; barColor = v > 0 ? '#ff9e6d' : '#6dbfff'; }
+        else if (absV > 0.3) { cls = 'moderate'; barColor = 'var(--text)'; }
+
+        const barW = Math.round(absV * 100);
+        corrGrid.innerHTML += `
+          <div class="corr-card">
+            <div class="corr-pair">${headers[i]} · ${headers[j]}</div>
+            <div class="corr-val ${cls}">${fmt(v, 4)}</div>
+            <div class="corr-bar-wrap">
+              <div class="corr-bar" style="width:${barW}%;background:${barColor}"></div>
+            </div>
+          </div>
+        `;
+      });
+      content.appendChild(corrGrid);
+    }
+
+    // ── Code pane ──
+    appendHTML(content, `<div class="section-title">The code doing this</div>`);
+
+    const matrixRows = C.map((row, i) =>
+      `  [${row.map(v => fmt(v, 4).padStart(8)).join(', ')}]  # ${headers[i]}`
+    ).join('\n');
+
+    const codeParts = `<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Z is your standardised matrix — shape (${n}, ${p})</span>
+<span class="va">C</span> = np.<span class="fn">dot</span>(Z.T, Z) / (n - <span class="nm">1</span>)
+<span class="cm"># equivalent to: np.cov(Z.T)</span>
+
+<span class="cm"># C is symmetric: C[i,j] == C[j,i]</span>
+<span class="cm"># C has shape (${p}, ${p})</span>
+
+<span class="cm"># Your computed covariance matrix:</span>
+<span class="cm"># ${headers.join('    ')}</span>
+<span class="va">C</span> = np.<span class="fn">array</span>([
+${matrixRows}
+])`;
+
+    const codePane = document.createElement('div');
+    codePane.className = 'code-pane';
+    codePane.innerHTML = `
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <span class="code-filename">covariance.py</span>
+      </div>
+      <div class="code-body"><pre>${codeParts}</pre></div>
+    `;
+    content.appendChild(codePane);
+
+    // ── Properties explainer ──
+    appendHTML(content, `
+      <div class="explainer">
+        <h2>Key properties of this matrix</h2>
+        <p><strong style="color:#fff">Symmetric</strong> — C[i,j] always equals C[j,i]. The covariance between height and weight is the same as between weight and height.</p>
+        <p><strong style="color:#fff">Positive semi-definite</strong> — all eigenvalues will be ≥ 0. This is why PCA always produces real, non-negative variance explained values.</p>
+        <p><strong style="color:#fff">Diagonal = 1</strong> — because we standardised. If you hadn't, the diagonal would be the raw variances of each column, and PCA would be dominated by the largest-scale variable.</p>
+        <p>This ${p}×${p} matrix is what PCA decomposes. In the next step we find its <strong style="color:#fff">eigenvectors</strong> — the principal directions — and <strong style="color:#fff">eigenvalues</strong> — how much variance each direction explains.</p>
+      </div>
+    `);
+
+    // ── CTA ──
+    appendHTML(content, `
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="window.location.href='eigen.html'">Proceed to eigen decomposition →</button>
+        <button class="btn btn-ghost" onclick="window.location.href='standardise.html'">← Back to standardisation</button>
+      </div>
+    `);
+  }
+</script>
+</body>
+</html>
