@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <style>
     /* ── Single-page layout ── */
     .page-section { display: none; }
@@ -151,6 +152,96 @@
       .interp-row { grid-template-columns: 1fr; }
       .notation-row { grid-template-columns: 1fr; }
     }
+
+    /* ── Section 5: Eigen decomposition ── */
+    .ev-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .ev-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+    .ev-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--mono); }
+    .ev-table tr:last-child td { border-bottom: none; }
+    .ev-table tr:hover td { background: rgba(0,0,0,0.02); }
+    .ev-bar-track { height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; width: 140px; }
+    .ev-bar-fill  { height: 100%; background: var(--accent); border-radius: 2px; }
+    .ev-cum { color: var(--text-muted) !important; }
+
+    .scree-outer { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem 0.8rem; margin-bottom: 2.5rem; }
+    .scree-bars  { display: flex; align-items: flex-end; gap: 8px; height: 110px; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .scree-col   { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; justify-content: flex-end; }
+    .scree-bar   { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.65; }
+    .scree-pct   { font-family: var(--mono); font-size: 9px; color: var(--text-muted); }
+    .scree-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-align: center; padding-top: 4px; }
+
+    .loadings-table { border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; width: 100%; }
+    .loadings-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.55rem 0.9rem; text-align: center; border-bottom: 1px solid var(--border-strong); border-right: 1px solid var(--border); font-size: 10px; letter-spacing: 0.06em; }
+    .loadings-table th:first-child { text-align: left; border-right: 1px solid var(--border-strong); min-width: 100px; }
+    .loadings-table th:last-child  { border-right: none; }
+    .loadings-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: right; }
+    .loadings-table td:first-child { color: var(--text-muted); text-align: left; background: var(--bg-3); border-right: 1px solid var(--border-strong); font-size: 11px; }
+    .loadings-table td:last-child  { border-right: none; }
+    .loadings-table tr:last-child td { border-bottom: none; }
+    .loading-pos { color: #b8860b; font-weight: 500; }
+    .loading-neg { color: #2c5282; font-weight: 500; }
+
+    .k-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .k-label { font-family: var(--sans); font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+    .proj-table { border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; white-space: nowrap; width: 100%; }
+    .proj-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.55rem 0.9rem; text-align: center; border-bottom: 1px solid var(--border-strong); border-right: 1px solid var(--border); font-size: 10px; letter-spacing: 0.06em; }
+    .proj-table th:first-child { text-align: left; border-right: 1px solid var(--border-strong); min-width: 60px; }
+    .proj-table th:last-child  { border-right: none; }
+    .proj-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: right; }
+    .proj-table td:first-child { color: var(--text-muted); text-align: left; background: var(--bg-3); border-right: 1px solid var(--border-strong); }
+    .proj-table td:last-child  { border-right: none; }
+    .proj-table tr:last-child td { border-bottom: none; }
+
+    .scatter-outer  { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 2.5rem; }
+    .scatter-header { padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+    .scatter-body   { padding: 0.5rem; }
+
+    /* ── Numpy code toggle ── */
+    .numpy-toggle {
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .numpy-toggle summary {
+      padding: 0.7rem 1.2rem;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      user-select: none;
+    }
+    .numpy-toggle summary::-webkit-details-marker { display: none; }
+    .numpy-toggle summary::before {
+      content: '▶';
+      font-size: 9px;
+      transition: transform 0.15s;
+      color: var(--accent);
+    }
+    .numpy-toggle[open] summary::before { transform: rotate(90deg); }
+    .numpy-toggle summary:hover { color: var(--text); }
+    .numpy-toggle .code-body { border-top: 1px solid var(--border); background: var(--bg-2); padding: 1.2rem 1.6rem; overflow-x: auto; }
+    .numpy-toggle .code-body pre { font-family: var(--mono); font-size: 0.82rem; line-height: 1.7; color: var(--text); white-space: pre; margin: 0; }
+
+    /* ── Dropped columns summary ── */
+    .dropped-summary { margin-top: 1rem; }
+    .dropped-label { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+    .drop-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .drop-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-3); border: 1px solid var(--border);
+      border-radius: 3px; padding: 3px 8px; font-family: var(--mono); font-size: 11px;
+    }
+    .drop-name   { color: var(--text); font-weight: 500; }
+    .drop-reason { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -217,7 +308,7 @@
     <div class="explainer">
       <h2>What is this matrix?</h2>
       <p>Every row is one observation. Every column is one variable. Together they form the matrix <strong style="color:var(--text)">X</strong> — the starting point for PCA.</p>
-      <div class="math" id="matrix-shape-formula">X ∈ ℝ<sup>n×p</sup></div>
+      <div class="math" id="matrix-shape-formula">\[\mathbf{X} \in \mathbb{R}^{n \times p}\]</div>
       <p>PCA finds new directions in this p-dimensional space that capture the most variance. But first — look at your raw numbers.</p>
     </div>
 
@@ -244,8 +335,21 @@
       <h2>Why we can't use this matrix directly</h2>
       <p>PCA finds directions of maximum variance. If one column has values in the thousands and another in the single digits, PCA will be dominated by the large-scale column — not because it's more important, but because its numbers are bigger.</p>
       <p>The fix is <strong style="color:var(--text)">standardisation</strong>: subtract the mean and divide by the standard deviation for each column. Every column ends up with mean 0 and standard deviation 1.</p>
-      <div class="math">z<sub>ij</sub> = (x<sub>ij</sub> − μ<sub>j</sub>) / σ<sub>j</sub></div>
+      <div class="math">\[z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}\]</div>
     </div>
+
+    <details class="numpy-toggle">
+      <summary>numpy equivalent</summary>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># X is your raw data matrix, shape (n, p)</span>
+<span class="va">X</span> = np.<span class="fn">array</span>(data)
+
+<span class="cm"># Inspect the matrix</span>
+<span class="fn">print</span>(X.<span class="fn">shape</span>)   <span class="cm"># (n, p)</span>
+<span class="fn">print</span>(X.<span class="fn">mean</span>(axis=<span class="nm">0</span>))  <span class="cm"># per-column means</span>
+<span class="fn">print</span>(X.<span class="fn">std</span>(axis=<span class="nm">0</span>))   <span class="cm"># per-column std devs</span></pre></div>
+    </details>
 
     <div class="cta-row">
       <button class="btn btn-primary" onclick="showSection(3)">Proceed to standardisation →</button>
@@ -265,7 +369,7 @@
     <div class="explainer">
       <h2>Putting every variable on equal footing</h2>
       <p>For each column <em>j</em>, we subtract its mean and divide by its standard deviation:</p>
-      <div class="math">z<sub>ij</sub> = (x<sub>ij</sub> − μ<sub>j</sub>) / σ<sub>j</sub></div>
+      <div class="math">\[z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}\]</div>
       <p>After this transform, every column has <strong style="color:var(--text)">mean = 0</strong> and <strong style="color:var(--text)">std = 1</strong>. PCA can then measure variance fairly across all features.</p>
     </div>
 
@@ -279,8 +383,23 @@
       <h2>What we have now</h2>
       <p>Matrix <strong style="color:var(--text)">Z</strong> — where every column has mean 0 and standard deviation 1. The data is now scale-invariant.</p>
       <p>Next: we compute the <strong style="color:var(--text)">covariance matrix</strong> of Z — a p×p matrix that captures how much every pair of variables moves together. It's the heart of PCA.</p>
-      <div class="math">Σ = (1/(n−1)) · Zᵀ Z</div>
+      <div class="math">\[\Sigma = \frac{1}{n-1}\, Z^\top Z\]</div>
     </div>
+
+    <details class="numpy-toggle">
+      <summary>numpy equivalent</summary>
+      <div class="code-body"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># X is your raw data matrix, shape (n, p)</span>
+<span class="va">mu</span>    = X.<span class="fn">mean</span>(axis=<span class="nm">0</span>)          <span class="cm"># shape (p,)</span>
+<span class="va">sigma</span> = X.<span class="fn">std</span>(axis=<span class="nm">0</span>, ddof=<span class="nm">1</span>)   <span class="cm"># sample std, shape (p,)</span>
+
+<span class="va">Z</span> = (X - mu) / sigma             <span class="cm"># shape (n, p), mean=0 std=1 per column</span>
+
+<span class="cm"># Verify</span>
+<span class="fn">print</span>(Z.<span class="fn">mean</span>(axis=<span class="nm">0</span>))            <span class="cm"># → [~0, ~0, ...]</span>
+<span class="fn">print</span>(Z.<span class="fn">std</span>(axis=<span class="nm">0</span>, ddof=<span class="nm">1</span>))     <span class="cm"># → [1.0, 1.0, ...]</span></pre></div>
+    </details>
 
     <div class="cta-row">
       <button class="btn btn-primary" onclick="showSection(4)">Proceed to covariance matrix →</button>
@@ -300,7 +419,7 @@
     <div class="explainer">
       <h2>What is a covariance matrix?</h2>
       <p>Each entry C<sub>ij</sub> measures how much variables <em>i</em> and <em>j</em> vary together. If large values of variable <em>i</em> tend to appear with large values of variable <em>j</em>, their covariance is positive. If they move in opposite directions, it's negative.</p>
-      <div class="math" id="cov-shape-formula">C = (1 / (n−1)) · Zᵀ Z</div>
+      <div class="math" id="cov-shape-formula">\[C = \frac{1}{n-1}\, Z^\top Z\]</div>
       <p>Because we standardised first, the diagonal entries are all exactly 1 (variance of each standardised variable). The off-diagonal entries are the Pearson correlations between pairs of variables.</p>
       <p>PCA will decompose this matrix into <strong style="color:var(--text)">eigenvectors</strong> (principal directions) and <strong style="color:var(--text)">eigenvalues</strong> (how much variance each direction explains).</p>
     </div>
@@ -342,6 +461,16 @@
       <p><strong style="color:var(--text)">Diagonal = 1</strong> — because we standardised. Without this, PCA would be dominated by whichever variable happens to have the largest scale.</p>
     </div>
 
+    <details class="numpy-toggle">
+      <summary>numpy equivalent</summary>
+      <div class="code-body"><pre><span class="cm"># Z is the standardised matrix, shape (n, p)</span>
+<span class="va">C</span> = np.<span class="fn">cov</span>(Z.T)              <span class="cm"># shape (p, p) — equivalent to Z.T @ Z / (n-1)</span>
+
+<span class="cm"># C is symmetric: C[i,j] == C[j,i]</span>
+<span class="cm"># Diagonal entries are all 1.0 (because Z is standardised)</span>
+<span class="fn">print</span>(np.<span class="fn">diag</span>(C))             <span class="cm"># → [1.0, 1.0, ...]</span></pre></div>
+    </details>
+
     <div class="cta-row">
       <button class="btn btn-primary" onclick="showSection(5)">Proceed to eigen decomposition →</button>
     </div>
@@ -360,15 +489,12 @@
     <div class="explainer">
       <h2>What comes next</h2>
       <p>We decompose the covariance matrix C into its <strong style="color:var(--text)">eigenvectors</strong> and <strong style="color:var(--text)">eigenvalues</strong>:</p>
-      <div class="math">C = V Λ Vᵀ</div>
+      <div class="math">\[C = V \Lambda V^\top\]</div>
       <p>Each eigenvector <strong style="color:var(--text)">v<sub>k</sub></strong> defines a principal component — a direction in your original p-dimensional space. The corresponding eigenvalue <strong style="color:var(--text)">λ<sub>k</sub></strong> tells you how much variance is explained in that direction.</p>
       <p>The first principal component is the direction of greatest variance. The second is perpendicular to the first, and explains the next most variance — and so on. Together, a handful of components often capture the vast majority of the structure in your data.</p>
     </div>
 
-    <div class="eigen-placeholder" id="eigen-content">
-      <strong>Eigen decomposition visualisation coming soon.</strong><br />
-      <span style="font-size:0.8rem;margin-top:0.5rem;display:block">Upload data above and proceed through the steps — this section will populate once implemented.</span>
-    </div>
+    <div id="eigen-content"></div>
   </section>
 
 </div>
@@ -451,18 +577,64 @@
     return { headers: parse(lines[0]), rows: lines.slice(1).map(parse) };
   }
 
+  function classifyCol(name, vals) {
+    const lname = name.toLowerCase().trim();
+    const isMissing = v => v === '' || v === 'NA' || v === 'NaN' || v === 'null' || v === 'NULL' || v === 'N/A';
+    const nonMissing = vals.filter(v => !isMissing(v));
+    if (nonMissing.length === 0) return 'not_numeric';
+
+    const numOk = nonMissing.filter(v => !isNaN(parseFloat(v)) && isFinite(v));
+    const numRatio = numOk.length / nonMissing.length;
+
+    if (numRatio < 0.9) {
+      // Date by name
+      if (/date|time|stamp|datetime/i.test(lname)) return 'date';
+      // Date by value pattern
+      const dateRe = /^\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/;
+      if (nonMissing.filter(v => dateRe.test(v.trim())).length / nonMissing.length > 0.7) return 'date';
+      return 'not_numeric';
+    }
+
+    const nums = numOk.map(parseFloat);
+
+    // Name-based date detection even if parseable as number (e.g. year column "2020")
+    if (/^(date|time|timestamp|datetime|dt)$/i.test(lname)) return 'date';
+    // Name-based index detection
+    if (/^(index|idx|unnamed|rowid|row_id|row\.id|_c0)$/i.test(lname)) return 'index';
+
+    const allInt = nums.every(v => Number.isInteger(v));
+    if (allInt) {
+      // Sequential integers → row index
+      const sorted = [...nums].sort((a, b) => a - b);
+      const isSeq = sorted.length >= 2 && sorted.every((v, i) => i === 0 || v === sorted[i - 1] + 1);
+      if (isSeq) return 'index';
+
+      // Name hints at ID + all unique → ID column
+      if (/(?:^|[_\s])(id|key|code|ref)(?:[_\s]|$)|^id$/i.test(lname)) {
+        if (new Set(nums).size === nums.length) return 'id';
+      }
+    }
+
+    // Constant column → useless for PCA
+    const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+    if (nums.every(v => Math.abs(v - mean) < 1e-10)) return 'constant';
+
+    return 'keep';
+  }
+
   function parseAndAnalyse(text) {
     const parsed = parseCSV(text);
     if (!parsed) return { error: 'Could not parse CSV.' };
     const { headers, rows } = parsed;
     const n = rows.length;
-    const isNumeric = v => v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && !isNaN(parseFloat(v));
-    const numericCols = headers.map((h, i) => {
+    const numericCols = [], droppedCols = [];
+    headers.forEach((h, i) => {
       const vals = rows.map(r => r[i] ?? '');
-      const numOk = vals.filter(isNumeric).length;
-      return numOk / vals.length >= 0.9 ? { name: h, idx: i } : null;
-    }).filter(Boolean);
-    return { headers, rows, n, numericCols };
+      const reason = classifyCol(h, vals);
+      if (reason === 'keep') numericCols.push({ name: h, idx: i });
+      else droppedCols.push({ name: h, reason });
+    });
+    return { headers, rows, n, numericCols, droppedCols };
   }
 
   function renderUploadResult(data) {
@@ -476,15 +648,25 @@
       return;
     }
 
-    const { n, numericCols } = data;
+    const { n, numericCols, droppedCols } = data;
     const p = numericCols.length;
     const ok = p >= 2 && n >= 5;
     const cls  = ok ? 'ready' : 'not-ready';
     const icon = ok ? '✓' : '✕';
     const title = ok ? 'Dataset is ready for PCA' : 'Dataset is not suitable for PCA';
+    const dropped = droppedCols.length;
     const body  = ok
-      ? `${p} numeric column${p !== 1 ? 's' : ''} · ${n} rows`
-      : `Need ≥ 2 numeric columns and ≥ 5 rows. Found ${p} numeric column${p !== 1 ? 's' : ''} and ${n} rows.`;
+      ? `${p} numeric column${p !== 1 ? 's' : ''} · ${n} rows${dropped ? ` · ${dropped} column${dropped > 1 ? 's' : ''} excluded` : ''}`
+      : `Need ≥ 2 numeric columns and ≥ 5 rows. Found ${p} usable numeric column${p !== 1 ? 's' : ''} and ${n} rows.`;
+
+    const reasonLabel = { index: 'row index', id: 'ID column', date: 'date / time', not_numeric: 'non-numeric', constant: 'no variance' };
+    const droppedHTML = dropped ? `
+      <div class="dropped-summary">
+        <div class="dropped-label">Excluded columns:</div>
+        <div class="drop-pills">
+          ${droppedCols.map(c => `<span class="drop-pill"><span class="drop-name">${c.name}</span><span class="drop-reason">${reasonLabel[c.reason] || c.reason}</span></span>`).join('')}
+        </div>
+      </div>` : '';
 
     verdictDiv.innerHTML = `
       <div class="verdict ${cls}">
@@ -493,7 +675,8 @@
           <div class="verdict-title">${title}</div>
           <div class="verdict-body">${body}</div>
         </div>
-      </div>`;
+      </div>
+      ${droppedHTML}`;
 
     if (ok) {
       ctaDiv.style.display = 'flex';
@@ -520,7 +703,8 @@
 
     // Update formula
     document.getElementById('matrix-shape-formula').innerHTML =
-      `X ∈ ℝ<sup>${n}×${p}</sup>   (${n} observations, ${p} features)`;
+      `\\[\\mathbf{X} \\in \\mathbb{R}^{${n} \\times ${p}} \\quad (${n}\\text{ obs},\\; ${p}\\text{ vars})\\]`;
+    renderMath(document.getElementById('matrix-shape-formula'));
 
     // Build truncated table
     const MAX_ROWS = 15, MAX_COLS = 10;
@@ -658,7 +842,8 @@
     state.C = C;
 
     document.getElementById('cov-shape-formula').innerHTML =
-      `C = (1 / (n−1)) · Zᵀ Z &nbsp;&nbsp; shape: ${p}×${p}`;
+      `\\[C = \\frac{1}{n-1}\\, Z^\\top Z \\qquad (${p}\\times${p})\\]`;
+    renderMath(document.getElementById('cov-shape-formula'));
 
     // Off-diagonal range for color scaling
     let offMin = Infinity, offMax = -Infinity;
@@ -721,13 +906,278 @@
     table.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
   }
 
+  // ── Jacobi eigendecomposition (symmetric matrices) ────────
+  function jacobiEigen(A) {
+    const n = A.length;
+    let M = A.map(r => [...r]);
+    let V = Array.from({length: n}, (_, i) =>
+      Array.from({length: n}, (_, j) => i === j ? 1 : 0)
+    );
+    for (let iter = 0; iter < 200 * n * n; iter++) {
+      let p = 0, q = 1, maxVal = 0;
+      for (let i = 0; i < n - 1; i++)
+        for (let j = i + 1; j < n; j++)
+          if (Math.abs(M[i][j]) > maxVal) { maxVal = Math.abs(M[i][j]); p = i; q = j; }
+      if (maxVal < 1e-12) break;
+      const phi = 0.5 * Math.atan2(2 * M[p][q], M[q][q] - M[p][p]);
+      const c = Math.cos(phi), s = Math.sin(phi);
+      const Mpp = c*c*M[p][p] - 2*s*c*M[p][q] + s*s*M[q][q];
+      const Mqq = s*s*M[p][p] + 2*s*c*M[p][q] + c*c*M[q][q];
+      for (let r = 0; r < n; r++) {
+        if (r !== p && r !== q) {
+          const Mrp = c*M[r][p] - s*M[r][q];
+          const Mrq = s*M[r][p] + c*M[r][q];
+          M[r][p] = M[p][r] = Mrp;
+          M[r][q] = M[q][r] = Mrq;
+        }
+      }
+      M[p][p] = Mpp; M[q][q] = Mqq; M[p][q] = M[q][p] = 0;
+      for (let r = 0; r < n; r++) {
+        const Vrp = c*V[r][p] - s*V[r][q];
+        const Vrq = s*V[r][p] + c*V[r][q];
+        V[r][p] = Vrp; V[r][q] = Vrq;
+      }
+    }
+    return { values: M.map((r, i) => r[i]), vectors: V };
+  }
+
+  // ── Step 5: Eigen decomposition ───────────────────────────
+  function renderEigenSection() {
+    const { headers, Z, C } = state;
+    const p = headers.length;
+    const content = document.getElementById('eigen-content');
+
+    const { values, vectors } = jacobiEigen(C);
+    const order = values.map((_, i) => i).sort((a, b) => values[b] - values[a]);
+    state.eigenvalues = order.map(i => Math.max(0, values[i]));
+    // W[j][rank] = loading of variable j on PC rank
+    state.W = Array.from({length: p}, (_, j) => order.map(orig => vectors[j][orig]));
+    const totalVar = state.eigenvalues.reduce((a, b) => a + b, 0);
+    state.varRatios = state.eigenvalues.map(v => v / totalVar);
+
+    content.innerHTML = '';
+
+    // ── Eigenvalues table ──
+    let cumPct = 0;
+    const evRows = state.eigenvalues.map((ev, rank) => {
+      const pct = state.varRatios[rank] * 100;
+      cumPct += pct;
+      return `<tr>
+        <td style="color:var(--accent);font-weight:600">PC${rank+1}</td>
+        <td>${ev.toFixed(4)}</td>
+        <td><div class="ev-bar-track"><div class="ev-bar-fill" style="width:${pct.toFixed(1)}%"></div></div></td>
+        <td>${pct.toFixed(1)}%</td>
+        <td class="ev-cum">${cumPct.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+
+    const evDiv = document.createElement('div');
+    evDiv.innerHTML = `
+      <div class="section-title">Eigenvalues &amp; variance explained</div>
+      <div class="table-wrap" style="margin-bottom:2.5rem">
+        <table class="ev-table">
+          <thead><tr>
+            <th>Component</th><th>Eigenvalue λ</th>
+            <th style="width:160px">Variance</th>
+            <th>% of total</th><th>Cumulative</th>
+          </tr></thead>
+          <tbody>${evRows}</tbody>
+        </table>
+      </div>`;
+    content.appendChild(evDiv);
+
+    // ── Scree plot ──
+    const maxEv = state.eigenvalues[0];
+    const screeCols = state.eigenvalues.map((ev, rank) => {
+      const h = Math.round((ev / maxEv) * 100);
+      return `<div class="scree-col">
+        <div class="scree-pct">${(state.varRatios[rank]*100).toFixed(1)}%</div>
+        <div class="scree-bar" style="height:${h}px"></div>
+        <div class="scree-label">PC${rank+1}</div>
+      </div>`;
+    }).join('');
+
+    const screeDiv = document.createElement('div');
+    screeDiv.innerHTML = `
+      <div class="section-title">Scree plot</div>
+      <div class="scree-outer"><div class="scree-bars">${screeCols}</div></div>`;
+    content.appendChild(screeDiv);
+
+    // ── Loadings matrix ──
+    let lHead = '<tr><th>Variable</th>';
+    state.eigenvalues.forEach((_, r) => { lHead += `<th>PC${r+1}</th>`; });
+    lHead += '</tr>';
+    let lBody = '';
+    headers.forEach((h, j) => {
+      lBody += `<tr><td>${h}</td>`;
+      state.W[j].forEach(w => {
+        const cls = Math.abs(w) > 0.4 ? (w > 0 ? 'loading-pos' : 'loading-neg') : '';
+        lBody += `<td class="${cls}">${w.toFixed(4)}</td>`;
+      });
+      lBody += '</tr>';
+    });
+
+    const loadDiv = document.createElement('div');
+    loadDiv.innerHTML = `
+      <div class="section-title">Loadings matrix W (eigenvectors as columns)</div>
+      <div class="table-wrap" style="margin-bottom:1.5rem">
+        <table class="loadings-table">
+          <thead>${lHead}</thead>
+          <tbody>${lBody}</tbody>
+        </table>
+      </div>
+      <div class="explainer" style="margin-bottom:2.5rem">
+        <h2>What loadings tell you</h2>
+        <p>Each column is a principal component — a direction in your original ${p}-dimensional space. The value for each variable shows how much it contributes to that component.</p>
+        <p>A loading near ±1 means that variable strongly defines that component. Near 0 means it barely contributes. Each column is a unit vector and all columns are mutually orthogonal — this is the V in C = V Λ Vᵀ.</p>
+      </div>`;
+    content.appendChild(loadDiv);
+
+    // ── Projection ──
+    const defaultK = Math.min(2, p);
+    const kBtns = Array.from({length: p}, (_, i) => i + 1).map(k =>
+      `<button class="toggle-btn${k === defaultK ? ' active' : ''}" id="k-btn-${k}" onclick="selectK(${k})">${k}</button>`
+    ).join('');
+
+    const numpyDiv = document.createElement('details');
+    numpyDiv.className = 'numpy-toggle';
+    numpyDiv.innerHTML = `
+      <summary>numpy equivalent</summary>
+      <div class="code-body"><pre><span class="cm"># C is the covariance matrix, shape (${p}, ${p})</span>
+<span class="va">eigenvalues</span>, <span class="va">eigenvectors</span> = np.linalg.<span class="fn">eig</span>(C)
+
+<span class="cm"># Sort by eigenvalue descending</span>
+<span class="va">order</span>        = np.<span class="fn">argsort</span>(eigenvalues)[::-<span class="nm">1</span>]
+<span class="va">eigenvalues</span>  = eigenvalues[order]
+<span class="va">eigenvectors</span> = eigenvectors[:, order]   <span class="cm"># columns are eigenvectors</span>
+
+<span class="cm"># Select top k components and project</span>
+<span class="va">k</span> = <span class="nm">2</span>                                   <span class="cm"># change as needed</span>
+<span class="va">W</span>     = eigenvectors[:, :<span class="va">k</span>]            <span class="cm"># (${p}, k) — loadings matrix</span>
+<span class="va">X_pca</span> = Z @ W                           <span class="cm"># (${Z.length}, k) — projected data</span>
+
+<span class="cm"># Variance explained</span>
+<span class="fn">print</span>(eigenvalues / eigenvalues.<span class="fn">sum</span>())  <span class="cm"># ratio per component</span></pre></div>`;
+    content.appendChild(numpyDiv);
+
+    const projDiv = document.createElement('div');
+    projDiv.innerHTML = `
+      <div class="section-title">Project your data</div>
+      <div class="explainer" style="margin-bottom:1.5rem">
+        <h2>From p dimensions to k</h2>
+        <p>Select the top k eigenvectors to form the p×k matrix W. The projected data is X_pca = ZW.</p>
+        <div class="math">\\[\\mathbf{X}_{\\mathrm{pca}} = \\mathbf{Z}\\,\\mathbf{W} \\qquad (${Z.length}\\times k)\\]</div>
+        <p>Each row is one observation re-expressed in the new coordinate system of the principal components. You lose the dimensions that explain the least variance — but the structure of your data is largely preserved.</p>
+      </div>
+      <div class="k-row">
+        <span class="k-label">Keep k =</span>
+        ${kBtns}
+        <span class="k-label" id="k-var-label"></span>
+      </div>
+      <div id="proj-output"></div>`;
+    content.appendChild(projDiv);
+    renderMath(content);
+
+    selectK(defaultK);
+  }
+
+  function selectK(k) {
+    const { eigenvalues, varRatios } = state;
+    for (let i = 1; i <= eigenvalues.length; i++) {
+      const btn = document.getElementById(`k-btn-${i}`);
+      if (btn) btn.classList.toggle('active', i === k);
+    }
+    const varRetained = (varRatios.slice(0, k).reduce((a, b) => a + b, 0) * 100).toFixed(1);
+    const lbl = document.getElementById('k-var-label');
+    if (lbl) lbl.textContent = `component${k > 1 ? 's' : ''} · ${varRetained}% variance retained`;
+    renderProjectionOutput(k);
+  }
+
+  function renderProjectionOutput(k) {
+    const { Z, W } = state;
+    const n = Z.length;
+    const Xpca = Z.map(row =>
+      Array.from({length: k}, (_, rank) => row.reduce((s, v, j) => s + v * W[j][rank], 0))
+    );
+    const MAX_ROWS = 10;
+    let tHead = '<tr><th>obs</th>';
+    for (let r = 0; r < k; r++) tHead += `<th>PC${r+1}</th>`;
+    tHead += '</tr>';
+    let tBody = Xpca.slice(0, MAX_ROWS).map((row, i) =>
+      `<tr><td>${i+1}</td>${row.map(v => `<td>${v.toFixed(4)}</td>`).join('')}</tr>`
+    ).join('');
+    if (n > MAX_ROWS)
+      tBody += `<tr><td colspan="${k+1}" style="text-align:center;color:var(--text-faint);font-size:11px">… ${n-MAX_ROWS} more rows</td></tr>`;
+
+    const projOut = document.getElementById('proj-output');
+    projOut.innerHTML = `
+      <div class="table-wrap" style="margin-bottom:${k === 2 ? '1.5rem' : '0'}">
+        <table class="proj-table">
+          <thead>${tHead}</thead>
+          <tbody>${tBody}</tbody>
+        </table>
+      </div>
+      ${k === 2 ? renderScatterSVG(Xpca) : ''}`;
+    renderMath(projOut);
+  }
+
+  function renderScatterSVG(Xpca) {
+    const W = 480, H = 320, pad = 44;
+    const pc1 = Xpca.map(r => r[0]), pc2 = Xpca.map(r => r[1]);
+    const x0 = Math.min(...pc1), x1 = Math.max(...pc1);
+    const y0 = Math.min(...pc2), y1 = Math.max(...pc2);
+    const xR = x1 - x0 || 1, yR = y1 - y0 || 1;
+    const sx = v => pad + (v - x0) / xR * (W - 2 * pad);
+    const sy = v => H - pad - (v - y0) / yR * (H - 2 * pad);
+    const axX = Math.max(pad, Math.min(W - pad, sx(0)));
+    const axY = Math.max(pad, Math.min(H - pad, sy(0)));
+    // blue (#6dbfff) → orange (#ff9e6d) by PC1 value
+    const col = v => {
+      const t = (v - x0) / xR;
+      return `rgb(${Math.round(109 + t*146)},${Math.round(191 - t*33)},${Math.round(255 - t*146)})`;
+    };
+    const pts = Xpca.slice(0, 500).map(r =>
+      `<circle cx="${sx(r[0]).toFixed(1)}" cy="${sy(r[1]).toFixed(1)}" r="3.5" fill="${col(r[0])}" opacity="0.65"/>`
+    ).join('');
+    return `
+      <div class="scatter-outer">
+        <div class="scatter-header">
+          <span>PC1 vs PC2 — ${Xpca.length} observations in the new coordinate space</span>
+          <span style="color:var(--text-faint)">colour → PC1 value</span>
+        </div>
+        <div class="scatter-body">
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+            <line x1="${axX}" y1="${pad}" x2="${axX}" y2="${H-pad}" stroke="var(--border-strong)" stroke-width="1"/>
+            <line x1="${pad}" y1="${axY}" x2="${W-pad}" y2="${axY}" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="#888" font-family="monospace">PC1 (${(state.varRatios[0]*100).toFixed(1)}% variance)</text>
+            <text x="12" y="${H/2}" text-anchor="middle" font-size="11" fill="#888" font-family="monospace" transform="rotate(-90,12,${H/2})">PC2 (${(state.varRatios[1]*100).toFixed(1)}%)</text>
+            ${pts}
+          </svg>
+        </div>
+      </div>`;
+  }
+
   // ── Intercept section reveals to render content ─────────
   const originalShowSection = showSection;
   window.showSection = function(step) {
     if (step === 3 && !state.Z) renderStandardiseSection();
     if (step === 4 && !state.C) renderCovarianceSection();
+    if (step === 5 && !state.eigenvalues) renderEigenSection();
     originalShowSection(step);
   };
+
+  // ── Math rendering ─────────────────────────────────────
+  function renderMath(el) {
+    if (window.renderMathInElement) {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: '\\[', right: '\\]', display: true },
+          { left: '\\(', right: '\\)', display: false }
+        ],
+        throwOnError: false
+      });
+    }
+  }
 
   // ── Helpers ────────────────────────────────────────────
   function fmtNum(v) {
@@ -737,5 +1187,14 @@
     return v.toExponential(2);
   }
 </script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'\\[', right:'\\]', display:true},
+      {left:'\\(', right:'\\)', display:false}
+    ],
+    throwOnError: false
+  })"></script>
 </body>
 </html>

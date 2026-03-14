@@ -183,15 +183,13 @@ h1 span { color: var(--accent); font-style: italic; }
 
 /* ── Math block ── */
 .math {
-  font-family: var(--mono);
-  font-size: 0.9rem;
   background: var(--bg-3);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 1rem 1.3rem;
+  padding: 0.9rem 1.3rem;
   margin: 1rem 0;
-  color: var(--text);
-  letter-spacing: 0.01em;
+  text-align: center;
+  overflow-x: auto;
 }
 
 /* ── Code pane ── */
