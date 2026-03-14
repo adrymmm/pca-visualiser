@@ -151,7 +151,7 @@
       .notation-row { grid-template-columns: 1fr; }
     }
 
-    /* ── Section 5: Eigen decomposition ── */
+    /* ── Section 5: Eigen-decomposition ── */
     .ev-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     .ev-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); }
     .ev-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--mono); }
@@ -266,7 +266,7 @@
       <div class="step-num">4</div> Covariance
     </div>
     <div class="step-item" data-step="5" onclick="scrollToStep(5)">
-      <div class="step-num">5</div> Eigen decomp
+      <div class="step-num">5</div> Eigen-decomposition
     </div>
     <div class="step-item" data-step="6" onclick="scrollToStep(6)">
       <div class="step-num">6</div> Summary
@@ -495,7 +495,7 @@
     </details>
 
     <div class="cta-row">
-      <button class="btn btn-primary" onclick="showSection(5)">Proceed to eigen decomposition →</button>
+      <button class="btn btn-primary" onclick="showSection(5)">Proceed to eigen-decomposition →</button>
     </div>
   </section>
 
@@ -506,7 +506,7 @@
     <hr class="section-sep" />
     <div class="step-heading">
       <div class="step-num-lg">5</div>
-      <h2>Eigen decomposition</h2>
+      <h2>Eigen-decomposition</h2>
     </div>
 
     <div class="explainer">
@@ -522,6 +522,7 @@
       <p>Imagine casting a shadow of a cloud of points onto a wall by shining a torch from different angles. There is one angle where the shadow spreads out as much as possible: that direction is the first principal component. The second is perpendicular to the first and gives the next largest shadow. The eigenvalues measure how large each shadow is; the eigenvectors record which direction the torch was pointing.</p>
     </div>
 
+    <div id="geo-illustration"></div>
     <div id="eigen-content"></div>
   </section>
 
@@ -552,28 +553,6 @@
       <p>The whole procedure is essentially finding the best angle from which to photograph a high-dimensional cloud of points, so that the resulting flat image loses as little information as possible.</p>
     </div>
 
-    <div class="explainer">
-      <h2>Choosing k</h2>
-      <p>There is no universal rule, but two heuristics are in common use:</p>
-      <p><strong style="color:var(--text)">Elbow rule:</strong> examine the scree plot. Choose k at the point where the curve flattens, beyond which each additional component explains little further variance.</p>
-      <p><strong style="color:var(--text)">Cumulative variance threshold:</strong> select the smallest k such that the cumulative explained variance exceeds a target. A threshold of 80% is common in exploratory work; 95% or higher is often required for preprocessing before a predictive model.</p>
-      <p>These two approaches typically agree but not always. The right k also depends on the downstream purpose: for visualisation, k = 2 or 3 is natural; for dimensionality reduction before regression or classification, more components may be warranted.</p>
-    </div>
-
-    <div class="explainer">
-      <h2>Reading the loadings</h2>
-      <p>Each column of W expresses a principal component in terms of the original variables. A large positive loading on a variable means that variable contributes strongly in the positive direction to that component; a large negative loading means it contributes in the opposite direction.</p>
-      <p>Variables with loadings near zero on a component contribute little to it. When several variables have large loadings of the same sign on one component, that component often corresponds to a latent factor with a natural interpretation: a size factor in morphological data, or a market-wide risk factor in financial returns.</p>
-      <p>The sign of each principal component is arbitrary. Negating all loadings of a component produces an equally valid solution, so the direction of a component should be interpreted relative to other variables within that component, not in absolute terms.</p>
-    </div>
-
-    <div class="explainer">
-      <h2>Limitations</h2>
-      <p><strong style="color:var(--text)">Linearity:</strong> PCA finds linear combinations of the original variables. Non-linear structure (clusters arranged along a curve or manifold) will not be captured. Kernel PCA and manifold methods such as t-SNE or UMAP address this.</p>
-      <p><strong style="color:var(--text)">Sensitivity to outliers:</strong> the covariance matrix is based on squared deviations, so a small number of extreme observations can strongly influence the principal directions. Robust PCA variants exist for this case.</p>
-      <p><strong style="color:var(--text)">Interpretability:</strong> principal components are linear combinations of all original variables and often have no simple physical meaning. Rotation methods such as Varimax can improve interpretability at some cost to the variance-maximisation property.</p>
-      <p><strong style="color:var(--text)">Continuous data:</strong> PCA is designed for continuous numeric variables. Applied to binary or ordinal data it can give misleading results; correspondence analysis and multiple correspondence analysis are better suited to categorical data.</p>
-    </div>
   </section>
 
 </div>
@@ -1262,7 +1241,145 @@
     table.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
   }
 
-  // ── Jacobi eigendecomposition (symmetric matrices) ────────
+  // ── Geometric illustration (synthetic 2D example) ─────────
+  function renderGeometricIllustration() {
+    const container = document.getElementById('geo-illustration');
+    if (!container) return;
+
+    // Seeded LCG for reproducible data
+    let seed = 12345;
+    const rand = () => { seed = (Math.imul(1664525, seed) + 1013904223) >>> 0; return seed / 0x100000000; };
+    const randn = () => { const u = Math.max(1e-10, rand()); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand()); };
+
+    const N = 80, sig1 = 2.4, sig2 = 0.55, angle = 38 * Math.PI / 180;
+    const ct = Math.cos(angle), st = Math.sin(angle);
+
+    // Scores in PC space → rotate to original space
+    const scores = Array.from({length: N}, () => [randn() * sig1, randn() * sig2]);
+    const pts    = scores.map(([a, b]) => [a * ct - b * st, a * st + b * ct]);
+
+    // Center both
+    const avg = arr => arr.reduce((s,v) => s+v, 0) / arr.length;
+    const mpc1 = avg(scores.map(s=>s[0])), mpc2 = avg(scores.map(s=>s[1]));
+    const mx   = avg(pts.map(p=>p[0])),   my   = avg(pts.map(p=>p[1]));
+    const cs   = scores.map(([a,b]) => [a-mpc1, b-mpc2]);
+    const cp   = pts.map(([x,y])   => [x-mx,   y-my]);
+
+    // Colour by PC1 score
+    const vmin = Math.min(...cs.map(s=>s[0])), vmax = Math.max(...cs.map(s=>s[0]));
+    const colFn = v => { const t = (v-vmin)/(vmax-vmin); return `rgb(${Math.round(109+t*146)},${Math.round(191-t*33)},${Math.round(255-t*146)})`; };
+    const colors = cs.map(s => colFn(s[0]));
+
+    // Pick 5 spread-out selected points by PC1 rank
+    const ranked = cs.map((s,i) => [s[0], i]).sort((a,b) => a[0]-b[0]);
+    const sel = [ranked[5][1], ranked[18][1], ranked[35][1], ranked[55][1], ranked[70][1]];
+
+    const W = 300, H = 260, pad = 38;
+    const allX = cp.map(p=>p[0]), allY = cp.map(p=>p[1]);
+    const xR = Math.max(...allX) - Math.min(...allX);
+    const yR = Math.max(...allY) - Math.min(...allY);
+    const sc = Math.min((W-2*pad) / (xR+0.5), (H-2*pad) / (yR+0.5));
+    const Lx = v => W/2 + v*sc, Ly = v => H/2 - v*sc;
+    const Rx = v => W/2 + v*sc, Ry = v => H/2 - v*sc;
+
+    // Projection foot onto PC1 in original space
+    const foot = ([px,py]) => { const t = px*ct + py*st; return [t*ct, t*st]; };
+
+    const a1 = sig1*sc, a2 = sig2*sc;
+
+    // ── Left SVG ──
+    let L = `<defs>
+      <marker id="gl1" markerWidth="7" markerHeight="5" refX="5" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#8b1a1a"/></marker>
+      <marker id="gl2" markerWidth="7" markerHeight="5" refX="5" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#1a5c2d"/></marker>
+    </defs>`;
+
+    // Faint PC1 axis line across the plot
+    const ext = 3.2 * sig1 * sc;
+    L += `<line x1="${(W/2-ct*ext).toFixed(1)}" y1="${(H/2+st*ext).toFixed(1)}" x2="${(W/2+ct*ext).toFixed(1)}" y2="${(H/2-st*ext).toFixed(1)}" stroke="#8b1a1a" stroke-width="1" opacity="0.12"/>`;
+
+    // Grid axes
+    L += `<line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" stroke="#e4e4e4" stroke-width="1"/>`;
+    L += `<line x1="${W/2}" y1="${pad}" x2="${W/2}" y2="${H-pad}" stroke="#e4e4e4" stroke-width="1"/>`;
+    L += `<text x="${W-pad+2}" y="${H/2+12}" font-size="10" fill="#bbb" font-family="monospace">x₁</text>`;
+    L += `<text x="${W/2+4}" y="${pad-4}" font-size="10" fill="#bbb" font-family="monospace">x₂</text>`;
+
+    // Background points
+    cp.forEach((p, i) => {
+      if (sel.includes(i)) return;
+      L += `<circle cx="${Lx(p[0]).toFixed(1)}" cy="${Ly(p[1]).toFixed(1)}" r="2.5" fill="${colors[i]}" opacity="0.4"/>`;
+    });
+
+    // Projection dashes + feet
+    sel.forEach(i => {
+      const p = cp[i], [fx, fy] = foot(p);
+      L += `<line x1="${Lx(p[0]).toFixed(1)}" y1="${Ly(p[1]).toFixed(1)}" x2="${Lx(fx).toFixed(1)}" y2="${Ly(fy).toFixed(1)}" stroke="${colors[i]}" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.8"/>`;
+      L += `<circle cx="${Lx(fx).toFixed(1)}" cy="${Ly(fy).toFixed(1)}" r="3.5" fill="${colors[i]}"/>`;
+    });
+
+    // Selected points (top layer)
+    sel.forEach(i => {
+      const p = cp[i];
+      L += `<circle cx="${Lx(p[0]).toFixed(1)}" cy="${Ly(p[1]).toFixed(1)}" r="5" fill="${colors[i]}" stroke="#fff" stroke-width="1.5"/>`;
+    });
+
+    // Eigenvector arrows (solid forward, dashed back)
+    L += `<line x1="${W/2}" y1="${H/2}" x2="${(W/2+ct*a1).toFixed(1)}" y2="${(H/2-st*a1).toFixed(1)}" stroke="#8b1a1a" stroke-width="2.5" marker-end="url(#gl1)"/>`;
+    L += `<line x1="${W/2}" y1="${H/2}" x2="${(W/2-ct*a1).toFixed(1)}" y2="${(H/2+st*a1).toFixed(1)}" stroke="#8b1a1a" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.5"/>`;
+    L += `<line x1="${W/2}" y1="${H/2}" x2="${(W/2-st*a2).toFixed(1)}" y2="${(H/2-ct*a2).toFixed(1)}" stroke="#1a5c2d" stroke-width="2" marker-end="url(#gl2)"/>`;
+    L += `<line x1="${W/2}" y1="${H/2}" x2="${(W/2+st*a2).toFixed(1)}" y2="${(H/2+ct*a2).toFixed(1)}" stroke="#1a5c2d" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.5"/>`;
+
+    // Arrow labels
+    L += `<text x="${(W/2+ct*a1+6).toFixed(0)}" y="${(H/2-st*a1+4).toFixed(0)}" font-size="10" fill="#8b1a1a" font-family="monospace" font-weight="600">PC1 (√λ₁)</text>`;
+    L += `<text x="${(W/2-st*a2+4).toFixed(0)}" y="${(H/2-ct*a2-5).toFixed(0)}" font-size="10" fill="#1a5c2d" font-family="monospace" font-weight="600">PC2 (√λ₂)</text>`;
+
+    // ── Right SVG ──
+    let R = '';
+
+    // Coloured axes
+    R += `<line x1="${pad}" y1="${H/2}" x2="${W-pad}" y2="${H/2}" stroke="#8b1a1a" stroke-width="1.5" opacity="0.2"/>`;
+    R += `<line x1="${W/2}" y1="${pad}" x2="${W/2}" y2="${H-pad}" stroke="#1a5c2d" stroke-width="1.5" opacity="0.2"/>`;
+    R += `<text x="${W-pad+2}" y="${H/2+12}" font-size="10" fill="#8b1a1a" font-family="monospace" font-weight="600">PC1</text>`;
+    R += `<text x="${W/2+4}" y="${pad-4}" font-size="10" fill="#1a5c2d" font-family="monospace" font-weight="600">PC2</text>`;
+
+    // Background points
+    cs.forEach((s, i) => {
+      if (sel.includes(i)) return;
+      R += `<circle cx="${Rx(s[0]).toFixed(1)}" cy="${Ry(s[1]).toFixed(1)}" r="2.5" fill="${colors[i]}" opacity="0.4"/>`;
+    });
+
+    // Projection dashes + feet (vertical drop to PC1 axis)
+    sel.forEach(i => {
+      const [s1, s2] = cs[i];
+      R += `<line x1="${Rx(s1).toFixed(1)}" y1="${Ry(s2).toFixed(1)}" x2="${Rx(s1).toFixed(1)}" y2="${Ry(0).toFixed(1)}" stroke="${colors[i]}" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.8"/>`;
+      R += `<circle cx="${Rx(s1).toFixed(1)}" cy="${Ry(0).toFixed(1)}" r="3.5" fill="${colors[i]}"/>`;
+    });
+
+    // Selected points
+    sel.forEach(i => {
+      const [s1, s2] = cs[i];
+      R += `<circle cx="${Rx(s1).toFixed(1)}" cy="${Ry(s2).toFixed(1)}" r="5" fill="${colors[i]}" stroke="#fff" stroke-width="1.5"/>`;
+    });
+
+    container.innerHTML = `
+      <div class="section-title" style="margin-top:1rem">Geometric illustration: synthetic 2D example</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0.75rem">
+        <div class="scatter-outer">
+          <div class="scatter-header"><span>Original space (x₁, x₂)</span></div>
+          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${L}</svg></div>
+        </div>
+        <div class="scatter-outer">
+          <div class="scatter-header"><span>Principal component space (PC1, PC2)</span></div>
+          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${R}</svg></div>
+        </div>
+      </div>
+      <p style="font-family:var(--sans);font-size:12px;color:var(--text-muted);margin-bottom:2.5rem;text-align:center">
+        Five points share colours across both panels. Dashed lines are perpendicular projections onto PC1; filled circles show where each point lands on that axis.
+        Arrows in the left panel are the eigenvectors scaled by √λ, so the arrow length equals the standard deviation in that direction.
+        In the right panel, the tilted ellipse has become axis-aligned: the eigenvectors are now the coordinate axes.
+      </p>`;
+  }
+
+  // ── Jacobi eigen-decomposition (symmetric matrices) ────────
   function jacobiEigen(A) {
     const n = A.length;
     let M = A.map(r => [...r]);
@@ -1297,8 +1414,9 @@
     return { values: M.map((r, i) => r[i]), vectors: V };
   }
 
-  // ── Step 5: Eigen decomposition ───────────────────────────
+  // ── Step 5: Eigen-decomposition ───────────────────────────
   function renderEigenSection() {
+    renderGeometricIllustration();
     const { headers, Z, C } = state;
     const p = headers.length;
     const content = document.getElementById('eigen-content');
