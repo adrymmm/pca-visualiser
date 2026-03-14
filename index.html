@@ -255,25 +255,25 @@
     <p class="subtitle">A step-by-step derivation of PCA from the raw data matrix through to projection, with NumPy code at each stage.</p>
   </header>
 
-  <nav class="steps-nav" id="steps-nav">
-    <div class="step-item active" data-step="1" onclick="scrollToStep(1)">
+  <nav class="steps-nav" id="steps-nav" aria-label="PCA steps">
+    <button class="step-item active" data-step="1" onclick="scrollToStep(1)" aria-label="Step 1: Upload">
       <div class="step-num">1</div> Upload
-    </div>
-    <div class="step-item" data-step="2" onclick="scrollToStep(2)">
+    </button>
+    <button class="step-item" data-step="2" onclick="scrollToStep(2)" aria-label="Step 2: Data matrix">
       <div class="step-num">2</div> Data matrix
-    </div>
-    <div class="step-item" data-step="3" onclick="scrollToStep(3)">
+    </button>
+    <button class="step-item" data-step="3" onclick="scrollToStep(3)" aria-label="Step 3: Standardise">
       <div class="step-num">3</div> Standardise
-    </div>
-    <div class="step-item" data-step="4" onclick="scrollToStep(4)">
+    </button>
+    <button class="step-item" data-step="4" onclick="scrollToStep(4)" aria-label="Step 4: Covariance">
       <div class="step-num">4</div> Covariance
-    </div>
-    <div class="step-item" data-step="5" onclick="scrollToStep(5)">
+    </button>
+    <button class="step-item" data-step="5" onclick="scrollToStep(5)" aria-label="Step 5: Eigen-decomposition">
       <div class="step-num">5</div> Eigen-decomposition
-    </div>
-    <div class="step-item" data-step="6" onclick="scrollToStep(6)">
+    </button>
+    <button class="step-item" data-step="6" onclick="scrollToStep(6)" aria-label="Step 6: Summary">
       <div class="step-num">6</div> Summary
-    </div>
+    </button>
   </nav>
 
   <!-- ═══════════════════════════════════════════════════ -->
@@ -1026,6 +1026,12 @@
             return v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && !isNaN(parseFloat(v));
           })
         );
+        // Clear downstream state so stale results don't persist on re-upload
+        delete state.Z; delete state.C; delete state.eigenvalues;
+        delete state.W; delete state.varRatios;
+        document.getElementById('std-content').innerHTML   = '';
+        document.getElementById('cov-content').innerHTML   = '';
+        document.getElementById('eigen-content').innerHTML = '';
         state.headers = numericCols.map(c => c.name);
         state.matrix  = cleanRows.map(r => numericCols.map(c => parseFloat(r[c.idx])));
         renderMatrixSection();
@@ -1088,8 +1094,8 @@
         : ''}`;
 
     // Update notation cards
-    document.querySelector('#notation-cards .notation-card:first-child p:first-of-type').innerHTML =
-      `<span class="accent">X</span>: data matrix, shape ${n}×${p}`;
+    const notationP = document.querySelector('#notation-cards .notation-card:first-child p:first-of-type');
+    if (notationP) notationP.innerHTML = `<span class="accent">X</span>: data matrix, shape ${n}×${p}`;
   }
 
   // ── Step 3: Standardise ────────────────────────────────
@@ -1223,23 +1229,28 @@
     // Tooltip
     const tooltip = document.getElementById('tooltip');
     const table = wrap.querySelector('.cov-table');
+    let tooltipFrame = null;
     table.addEventListener('mousemove', e => {
-      const td = e.target.closest('td[data-v]');
-      if (!td) { tooltip.classList.remove('visible'); return; }
-      const i = +td.dataset.i, j = +td.dataset.j, v = +td.dataset.v;
-      const interp = i === j
-        ? `Variance of ${headers[i]} = ${v.toFixed(4)}`
-        : Math.abs(v) < 0.1 ? `${headers[i]} and ${headers[j]} are essentially uncorrelated`
-        : Math.abs(v) < 0.4 ? `Weak ${v>0?'positive':'negative'} relationship`
-        : Math.abs(v) < 0.7 ? `Moderate ${v>0?'positive':'negative'} covariance`
-        : `Strong ${v>0?'positive':'negative'} covariance`;
-      tooltip.innerHTML = `
-        <div class="tt-vars">${headers[i]} × ${headers[j]}</div>
-        <div class="tt-val">${v.toFixed(6)}</div>
-        <div class="tt-interp">${interp}</div>`;
-      tooltip.classList.add('visible');
-      tooltip.style.left = (e.clientX + 14) + 'px';
-      tooltip.style.top  = (e.clientY - 10) + 'px';
+      if (tooltipFrame) return;
+      tooltipFrame = requestAnimationFrame(() => {
+        tooltipFrame = null;
+        const td = e.target.closest('td[data-v]');
+        if (!td) { tooltip.classList.remove('visible'); return; }
+        const i = +td.dataset.i, j = +td.dataset.j, v = +td.dataset.v;
+        const interp = i === j
+          ? `Variance of ${headers[i]} = ${v.toFixed(4)}`
+          : Math.abs(v) < 0.1 ? `${headers[i]} and ${headers[j]} are essentially uncorrelated`
+          : Math.abs(v) < 0.4 ? `Weak ${v>0?'positive':'negative'} relationship`
+          : Math.abs(v) < 0.7 ? `Moderate ${v>0?'positive':'negative'} covariance`
+          : `Strong ${v>0?'positive':'negative'} covariance`;
+        tooltip.innerHTML = `
+          <div class="tt-vars">${headers[i]} × ${headers[j]}</div>
+          <div class="tt-val">${v.toFixed(6)}</div>
+          <div class="tt-interp">${interp}</div>`;
+        tooltip.classList.add('visible');
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top  = (e.clientY - 10) + 'px';
+      });
     });
     table.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
   }
@@ -1368,11 +1379,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0.75rem">
         <div class="scatter-outer">
           <div class="scatter-header"><span>Original space (x₁, x₂)</span></div>
-          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${L}</svg></div>
+          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Scatter plot in original x₁/x₂ space showing data ellipse with eigenvector arrows"><title>Original space: data ellipse with eigenvector arrows</title>${L}</svg></div>
         </div>
         <div class="scatter-outer">
           <div class="scatter-header"><span>Principal component space (PC1, PC2)</span></div>
-          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${R}</svg></div>
+          <div class="scatter-body"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Same data rotated into principal component space, now axis-aligned"><title>Principal component space: axis-aligned data</title>${R}</svg></div>
         </div>
       </div>
       <p style="font-family:var(--sans);font-size:12px;color:var(--text-muted);margin-bottom:2.5rem;text-align:center">
@@ -1636,15 +1647,15 @@
     return `
       <div class="scatter-outer">
         <div class="scatter-header">
-          <span>PC1 vs PC2: ${Xpca.length} observations (first two components always shown)</span>
+          <span>PC1 vs PC2: ${Xpca.length} observations${Xpca.length > 500 ? ' (first 500 plotted)' : ''}</span>
           <span style="color:var(--text-faint)">colour by PC1 value</span>
         </div>
         <div class="scatter-body">
-          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Scatter plot of ${Xpca.length} observations in PC1 vs PC2 space"><title>PC1 vs PC2 scatter: ${Xpca.length} observations</title>
             <line x1="${axX}" y1="${pad}" x2="${axX}" y2="${H-pad}" stroke="var(--border-strong)" stroke-width="1"/>
             <line x1="${pad}" y1="${axY}" x2="${W-pad}" y2="${axY}" stroke="var(--border-strong)" stroke-width="1"/>
             <text x="${W/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="#888" font-family="monospace">PC1 (${(state.varRatios[0]*100).toFixed(1)}% variance)</text>
-            <text x="12" y="${H/2}" text-anchor="middle" font-size="11" fill="#888" font-family="monospace" transform="rotate(-90,12,${H/2})">PC2 (${(state.varRatios[1]*100).toFixed(1)}%)</text>
+            <text x="12" y="${H/2}" text-anchor="middle" font-size="11" fill="#888" font-family="monospace" transform="rotate(-90,12,${H/2})">PC2${state.varRatios[1] != null ? ` (${(state.varRatios[1]*100).toFixed(1)}%)` : ''}</text>
             ${pts}
           </svg>
         </div>
