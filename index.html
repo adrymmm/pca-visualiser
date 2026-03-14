@@ -6,146 +6,9 @@
   <title>PCA Visualiser</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0f;
-      --bg-2: #111118;
-      --bg-3: #16161f;
-      --border: rgba(255,255,255,0.07);
-      --border-strong: rgba(255,255,255,0.14);
-      --text: #e8e8f0;
-      --text-muted: #7a7a8e;
-      --text-faint: #3a3a4e;
-      --accent: #6c63ff;
-      --accent-glow: rgba(108,99,255,0.15);
-      --accent-2: #00d4a0;
-      --danger: #ff5e5e;
-      --warn: #f0a500;
-      --success: #00d4a0;
-      --mono: 'DM Mono', monospace;
-      --sans: 'Syne', sans-serif;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0 2rem 6rem;
-    }
-
-    /* Header */
-    header {
-      padding: 3.5rem 0 3rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 3rem;
-    }
-
-    .badge {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 3px 10px;
-      border-radius: 2px;
-      margin-bottom: 1.2rem;
-    }
-
-    h1 {
-      font-size: clamp(2.2rem, 5vw, 3.4rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.05;
-      color: #fff;
-    }
-
-    h1 span {
-      color: var(--accent);
-    }
-
-    .subtitle {
-      margin-top: 0.9rem;
-      font-size: 1rem;
-      color: var(--text-muted);
-      font-weight: 400;
-      max-width: 520px;
-      line-height: 1.65;
-    }
-
-    /* Steps nav */
-    .steps-nav {
-      display: flex;
-      gap: 0;
-      margin-bottom: 3rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .step-item {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      font-size: 12px;
-      font-family: var(--mono);
-      color: var(--text-faint);
-      border-right: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--bg-2);
-      transition: color 0.2s;
-    }
-
-    .step-item:last-child { border-right: none; }
-
-    .step-item.active {
-      color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    .step-item.done {
-      color: var(--success);
-    }
-
-    .step-num {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 1px solid currentColor;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      flex-shrink: 0;
-    }
-
-    /* Upload zone */
+    /* index.html — unique styles only */
     .upload-zone {
       border: 1.5px dashed var(--border-strong);
       border-radius: 8px;
@@ -156,333 +19,43 @@
       background: var(--bg-2);
       position: relative;
     }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-glow); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { width: 48px; height: 48px; margin: 0 auto 1.2rem; display: block; opacity: 0.4; }
+    .upload-label { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+    .upload-hint  { font-size: 0.85rem; color: var(--text-muted); font-family: var(--mono); }
 
-    .upload-zone:hover,
-    .upload-zone.drag-over {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-
-    .upload-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 1.2rem;
-      display: block;
-      opacity: 0.4;
-    }
-
-    .upload-label {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 0.4rem;
-    }
-
-    .upload-hint {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-family: var(--mono);
-    }
-
-    /* Section */
-    .section {
-      margin-top: 2.5rem;
-      display: none;
-    }
-
+    .section { margin-top: 2.5rem; display: none; }
     .section.visible { display: block; }
 
-    .section-title {
-      font-size: 11px;
-      font-family: var(--mono);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-    }
-
-    /* Stats row */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-      background: var(--bg-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .stat-value.good { color: var(--success); }
-    .stat-value.bad { color: var(--danger); }
-    .stat-value.warn { color: var(--warn); }
-
-    /* Issues list */
-    .issues {
-      background: var(--bg-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .issue-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 0.85rem 1.1rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-
+    .issues { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .issue-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
     .issue-row:last-child { border-bottom: none; }
-
-    .issue-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 5px;
-    }
-
+    .issue-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
     .issue-dot.error { background: var(--danger); }
-    .issue-dot.warn { background: var(--warn); }
-    .issue-dot.ok { background: var(--success); }
-
+    .issue-dot.warn  { background: var(--warn); }
+    .issue-dot.ok    { background: var(--success); }
     .issue-text { color: var(--text); line-height: 1.5; }
-    .issue-sub { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .issue-sub  { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Column table */
-    .col-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
-
-    .col-table th {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: left;
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-3);
-    }
-
-    .col-table td {
-      padding: 0.7rem 1rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-      vertical-align: middle;
-    }
-
+    .col-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .col-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); }
+    .col-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
     .col-table tr:last-child td { border-bottom: none; }
-
     .col-table tr:hover td { background: rgba(255,255,255,0.025); }
 
-    .pill {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 3px;
-    }
-
-    .pill.numeric { background: rgba(108,99,255,0.15); color: #a59fff; }
-    .pill.text { background: rgba(255,94,94,0.12); color: #ff9090; }
-    .pill.mixed { background: rgba(240,165,0,0.12); color: #f0c050; }
-    .pill.drop { background: rgba(255,94,94,0.12); color: #ff9090; }
-    .pill.keep { background: rgba(0,212,160,0.12); color: #00d4a0; }
-
-    .missing-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .bar-track {
-      flex: 1;
-      height: 4px;
-      background: var(--bg-3);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--success);
-      transition: width 0.6s ease;
-    }
-
+    .missing-bar { display: flex; align-items: center; gap: 8px; }
+    .bar-track { flex: 1; height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 2px; background: var(--success); transition: width 0.6s ease; }
     .bar-fill.has-missing { background: var(--warn); }
 
-    /* PCA readiness verdict */
-    .verdict {
-      margin-top: 1.5rem;
-      border-radius: 6px;
-      padding: 1.2rem 1.4rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-
-    .verdict.ready { background: rgba(0,212,160,0.08); border: 1px solid rgba(0,212,160,0.25); }
-    .verdict.not-ready { background: rgba(255,94,94,0.07); border: 1px solid rgba(255,94,94,0.2); }
-    .verdict.caution { background: rgba(240,165,0,0.07); border: 1px solid rgba(240,165,0,0.2); }
-
-    .verdict-icon {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .verdict-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .verdict-body {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      font-family: var(--mono);
-    }
-
-    /* CTA button */
-    .cta-row {
-      margin-top: 2rem;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .btn {
-      font-family: var(--sans);
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 0.7rem 1.6rem;
-      border-radius: 5px;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-
-    .btn:active { transform: scale(0.98); }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border-strong);
-    }
-
-    .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
-
-    .table-wrap {
-      background: var(--bg-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    /* Preview table */
-    .preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-      font-family: var(--mono);
-    }
-
-    .preview-table th {
-      background: var(--bg-3);
-      color: var(--text-muted);
-      padding: 0.5rem 0.85rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-    }
-
-    .preview-table td {
-      padding: 0.45rem 0.85rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-      white-space: nowrap;
-    }
-
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-family: var(--mono); }
+    .preview-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.5rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 0.06em; white-space: nowrap; }
+    .preview-table td { padding: 0.45rem 0.85rem; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
     .preview-table tr:last-child td { border-bottom: none; }
     .preview-table td.is-missing { color: var(--danger); }
-    .preview-table td.is-text { color: var(--warn); }
-
+    .preview-table td.is-text    { color: var(--warn); }
     .overflow-x { overflow-x: auto; }
-
-    /* Loader */
-    .loader {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 1.2rem;
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border-strong);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .fade-in {
-      animation: fadeIn 0.3s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
@@ -620,6 +193,21 @@
     location.reload();
   });
 
+  document.getElementById('btn-proceed').addEventListener('click', () => {
+    if (!window._pcaData) return;
+    const { numericCols, rows } = window._pcaData;
+    const cleanRows = rows.filter(r =>
+      numericCols.every((col, _) => {
+        const v = r[col._origIdx];
+        return v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && v !== 'N/A';
+      })
+    );
+    const matrix = cleanRows.map(r => numericCols.map(col => parseFloat(r[col._origIdx])));
+    const headers = numericCols.map(c => c.name);
+    localStorage.setItem('pca_matrix', JSON.stringify({ headers, matrix }));
+    window.location.href = 'matrix.html';
+  });
+
   function show(id) {
     const el = document.getElementById(id);
     el.classList.add('visible', 'fade-in');
@@ -692,7 +280,7 @@
       const vals = rows.map(r => r[i] !== undefined ? r[i] : '');
       const missing = vals.filter(v => v === '' || v === 'NA' || v === 'NaN' || v === 'null' || v === 'NULL' || v === 'N/A').length;
       const type = inferType(vals);
-      return { name: h, type, missing, total: nRows, vals };
+      return { name: h, type, missing, total: nRows, vals, _origIdx: i };
     });
 
     const numericCols = columns.filter(c => c.type === 'numeric');
@@ -703,6 +291,7 @@
   }
 
   function render(data) {
+    window._pcaData = data;
     hide('section-loading');
 
     if (data.error) {
