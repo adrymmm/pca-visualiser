@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCA — Data Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-2: #111118;
+      --bg-3: #16161f;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.14);
+      --text: #e8e8f0;
+      --text-muted: #7a7a8e;
+      --text-faint: #3a3a4e;
+      --accent: #6c63ff;
+      --accent-glow: rgba(108,99,255,0.15);
+      --success: #00d4a0;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    header {
+      padding: 3rem 0 2.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #fff;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .subtitle {
+      margin-top: 0.8rem;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* Steps nav */
+    .steps-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 3rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .step-item {
+      flex: 1;
+      padding: 0.7rem 0.8rem;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-faint);
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-2);
+    }
+
+    .step-item:last-child { border-right: none; }
+    .step-item.active { color: var(--accent); background: var(--accent-glow); }
+    .step-item.done { color: var(--success); }
+
+    .step-num {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; flex-shrink: 0;
+    }
+
+    /* Explanation pane */
+    .explainer {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .explainer h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.6rem;
+    }
+
+    .explainer p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 0.5rem;
+    }
+
+    .explainer p:last-child { margin-bottom: 0; }
+
+    .math {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.8rem 1.1rem;
+      margin: 0.8rem 0;
+      color: #b8b0ff;
+      letter-spacing: 0.02em;
+    }
+
+    /* Section label */
+    .section-title {
+      font-size: 11px;
+      font-family: var(--mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+    }
+
+    .stat-label { font-size: 11px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+
+    /* Matrix container */
+    .matrix-wrap {
+      position: relative;
+      margin-bottom: 2.5rem;
+    }
+
+    .matrix-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-2);
+    }
+
+    /* The actual matrix table */
+    .mx-table {
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Row index column */
+    .mx-table .row-idx {
+      background: var(--bg-3);
+      color: var(--text-faint);
+      padding: 0.5rem 0.8rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      font-size: 11px;
+      min-width: 40px;
+    }
+
+    /* Col header */
+    .mx-table th {
+      background: var(--bg-3);
+      color: var(--text-muted);
+      padding: 0.6rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-strong);
+      border-right: 1px solid var(--border);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .mx-table th.corner {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      min-width: 40px;
+      border-right: 1px solid var(--border-strong);
+    }
+
+    .mx-table th:last-child { border-right: none; }
+
+    /* Data cells */
+    .mx-table td {
+      padding: 0.45rem 1rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      text-align: right;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .mx-table td:last-child { border-right: none; }
+    .mx-table tr:last-child td { border-bottom: none; }
+
+    /* Heat coloring applied via JS */
+    .mx-table td.heat-high { color: #ff9e6d; }
+    .mx-table td.heat-low  { color: #6dbfff; }
+    .mx-table td.heat-mid  { color: var(--text); }
+
+    .mx-table tr:hover td { background: rgba(108,99,255,0.06); }
+
+    /* Col highlight on hover */
+    .mx-table td.col-hover { background: rgba(108,99,255,0.1); }
+
+    /* Bracket notation overlay */
+    .bracket-left, .bracket-right {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 12px;
+      pointer-events: none;
+    }
+
+    .bracket-left  { left: -14px;  border-left: 2px solid var(--accent); border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); border-radius: 3px 0 0 3px; opacity: 0.4; }
+    .bracket-right { right: -14px; border-right: 2px solid var(--accent); border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); border-radius: 0 3px 3px 0; opacity: 0.4; }
+
+    /* Truncation notice */
+    .truncation-note {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 0.6rem;
+      text-align: center;
+    }
+
+    /* Notation pane */
+    .notation-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 2.5rem;
+    }
+
+    .notation-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.2rem;
+    }
+
+    .notation-card h3 {
+      font-size: 12px;
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .notation-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .notation-card .accent { color: var(--accent); }
+    .notation-card .success { color: var(--success); }
+
+    /* Column stats table */
+    .col-stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.825rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .col-stats-table th {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-3);
+    }
+
+    .col-stats-table td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .col-stats-table td:first-child { font-family: var(--sans); font-weight: 500; }
+    .col-stats-table tr:last-child td { border-bottom: none; }
+    .col-stats-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Sparkline bars */
+    .spark {
+      display: flex;
+      align-items: flex-end;
+      gap: 1px;
+      height: 20px;
+    }
+
+    .spark-bar {
+      width: 4px;
+      background: var(--accent);
+      opacity: 0.5;
+      border-radius: 1px 1px 0 0;
+      min-height: 2px;
+    }
+
+    .table-wrap {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 3px;
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* CTA */
+    .cta-row {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.7rem 1.6rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-strong); }
+    .btn-ghost:hover { color: var(--text); }
+
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* No data fallback */
+    .no-data {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">Step 2 of 5</div>
+    <h1>The data <span>matrix</span></h1>
+    <p class="subtitle">Your dataset as a matrix <strong style="color:var(--text)">X</strong> — the raw material everything else is built from.</p>
+  </header>
+
+  <!-- Steps nav -->
+  <nav class="steps-nav">
+    <div class="step-item done"><div class="step-num">✓</div> Upload</div>
+    <div class="step-item active"><div class="step-num">2</div> Data matrix</div>
+    <div class="step-item"><div class="step-num">3</div> Standardise</div>
+    <div class="step-item"><div class="step-num">4</div> Covariance</div>
+    <div class="step-item"><div class="step-num">5</div> Eigen decomp</div>
+  </nav>
+
+  <div id="main-content">
+    <div class="no-data">No data found — <a href="index.html" style="color:var(--accent)">go back and upload a CSV</a></div>
+  </div>
+
+</div>
+
+<script>
+  const stored = localStorage.getItem('pca_matrix');
+  if (!stored) {
+    // no data, fallback shown
+  } else {
+    const { headers, matrix } = JSON.parse(stored);
+    renderPage(headers, matrix);
+  }
+
+  function renderPage(headers, matrix) {
+    const n = matrix.length;
+    const p = headers.length;
+
+    // Compute per-column stats
+    const colStats = headers.map((h, j) => {
+      const vals = matrix.map(r => r[j]);
+      const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const variance = vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1);
+      const std = Math.sqrt(variance);
+      return { name: h, mean, min, max, std, variance, vals };
+    });
+
+    const content = document.getElementById('main-content');
+    content.innerHTML = '';
+    content.classList.add('fade-in');
+
+    // -- Explainer --
+    const expl = document.createElement('div');
+    expl.className = 'explainer';
+    expl.innerHTML = `
+      <h2>What is this matrix?</h2>
+      <p>Every row is one observation. Every column is one variable. Together they form the matrix <strong style="color:#fff">X</strong> — the starting point for PCA.</p>
+      <div class="math">X ∈ ℝ<sup>${n}×${p}</sup>   (${n} observations, ${p} features)</div>
+      <p>PCA will find new directions in this ${p}-dimensional space that capture the most variance in your data. But before that — let's make sure you can see exactly what you're working with.</p>
+    `;
+    content.appendChild(expl);
+
+    // -- Stats row --
+    const statsSection = document.createElement('div');
+    statsSection.innerHTML = `<div class="section-title">Matrix dimensions</div>`;
+    const statsRow = document.createElement('div');
+    statsRow.className = 'stats-row';
+
+    const ranges = colStats.map(c => c.max - c.min);
+    const maxRange = Math.max(...ranges).toFixed(2);
+    const avgStd = (colStats.reduce((a,c)=>a+c.std,0)/colStats.length).toFixed(3);
+
+    [
+      { label: 'n  (rows)', value: n },
+      { label: 'p  (columns)', value: p },
+      { label: 'avg std dev', value: avgStd },
+      { label: 'max range', value: maxRange },
+    ].forEach(s => {
+      statsRow.innerHTML += `
+        <div class="stat-card">
+          <div class="stat-label">${s.label}</div>
+          <div class="stat-value">${s.value}</div>
+        </div>`;
+    });
+    statsSection.appendChild(statsRow);
+    content.appendChild(statsSection);
+
+    // -- Matrix view --
+    const matrixSection = document.createElement('div');
+    matrixSection.innerHTML = `
+      <div class="section-title">Matrix X — your data</div>
+      <div class="toggle-row">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:4px">Colour cells by:</span>
+        <button class="toggle-btn active" id="btn-heat-col">column range</button>
+        <button class="toggle-btn" id="btn-heat-none">no colour</button>
+      </div>
+    `;
+
+    const MAX_ROWS_DISPLAY = 20;
+    const MAX_COLS_DISPLAY = 12;
+    const showRows = Math.min(n, MAX_ROWS_DISPLAY);
+    const showCols = Math.min(p, MAX_COLS_DISPLAY);
+
+    const scrollDiv = document.createElement('div');
+    scrollDiv.className = 'matrix-scroll';
+
+    const table = document.createElement('table');
+    table.className = 'mx-table';
+
+    // Header row
+    const thead = document.createElement('thead');
+    let thHTML = '<tr><th class="corner row-idx"></th>';
+    for (let j = 0; j < showCols; j++) {
+      thHTML += `<th>${headers[j]}</th>`;
+    }
+    if (p > MAX_COLS_DISPLAY) thHTML += `<th style="color:var(--text-faint)">…</th>`;
+    thHTML += '</tr>';
+    thead.innerHTML = thHTML;
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+
+    // Compute min/max per column for heatmap
+    const colMins = [], colMaxs = [];
+    for (let j = 0; j < showCols; j++) {
+      const vals = matrix.slice(0, showRows).map(r => r[j]);
+      colMins[j] = Math.min(...vals);
+      colMaxs[j] = Math.max(...vals);
+    }
+
+    for (let i = 0; i < showRows; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="row-idx">${i+1}</td>`;
+      for (let j = 0; j < showCols; j++) {
+        const val = matrix[i][j];
+        const range = colMaxs[j] - colMins[j];
+        const norm = range === 0 ? 0.5 : (val - colMins[j]) / range;
+        let heatClass = 'heat-mid';
+        if (norm >= 0.75) heatClass = 'heat-high';
+        else if (norm <= 0.25) heatClass = 'heat-low';
+        const td = document.createElement('td');
+        td.className = heatClass;
+        td.dataset.col = j;
+        td.textContent = formatNum(val);
+        tr.appendChild(td);
+      }
+      if (p > MAX_COLS_DISPLAY) {
+        const td = document.createElement('td');
+        td.style.color = 'var(--text-faint)';
+        td.textContent = '…';
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    scrollDiv.appendChild(table);
+    matrixSection.appendChild(scrollDiv);
+
+    if (n > MAX_ROWS_DISPLAY || p > MAX_COLS_DISPLAY) {
+      const note = document.createElement('div');
+      note.className = 'truncation-note';
+      const parts = [];
+      if (n > MAX_ROWS_DISPLAY) parts.push(`showing ${MAX_ROWS_DISPLAY} of ${n} rows`);
+      if (p > MAX_COLS_DISPLAY) parts.push(`showing ${MAX_COLS_DISPLAY} of ${p} columns`);
+      note.textContent = parts.join(' · ') + ' · all data used in calculations';
+      matrixSection.appendChild(note);
+    }
+
+    content.appendChild(matrixSection);
+
+    // Heat toggle logic
+    let heatOn = true;
+    document.getElementById('btn-heat-col').addEventListener('click', () => {
+      heatOn = true;
+      document.getElementById('btn-heat-col').classList.add('active');
+      document.getElementById('btn-heat-none').classList.remove('active');
+      table.querySelectorAll('td[data-col]').forEach(td => { td.style.color = ''; });
+    });
+    document.getElementById('btn-heat-none').addEventListener('click', () => {
+      heatOn = false;
+      document.getElementById('btn-heat-col').classList.remove('active');
+      document.getElementById('btn-heat-none').classList.add('active');
+      table.querySelectorAll('td[data-col]').forEach(td => { td.style.color = 'var(--text)'; });
+    });
+
+    // Column hover highlight
+    table.addEventListener('mouseover', e => {
+      const td = e.target.closest('td[data-col]');
+      if (!td) return;
+      const col = td.dataset.col;
+      table.querySelectorAll('td[data-col]').forEach(c => c.classList.toggle('col-hover', c.dataset.col === col));
+    });
+    table.addEventListener('mouseleave', () => {
+      table.querySelectorAll('.col-hover').forEach(c => c.classList.remove('col-hover'));
+    });
+
+    // -- Notation cards --
+    const notationSection = document.createElement('div');
+    notationSection.innerHTML = `<div class="section-title">How to read this</div>`;
+    const notationRow = document.createElement('div');
+    notationRow.className = 'notation-row';
+    notationRow.innerHTML = `
+      <div class="notation-card">
+        <h3>Notation</h3>
+        <p><span class="accent">X</span> — the full matrix, shape ${n}×${p}</p>
+        <p><span class="accent">x<sub>ij</sub></span> — value at row <em>i</em>, column <em>j</em></p>
+        <p><span class="accent">x<sub>j</sub></span> — the j-th column vector (one variable across all observations)</p>
+        <p style="margin-top:0.6rem">PCA operates on the <em>columns</em> — it finds linear combinations of your ${p} variables that explain the most variance.</p>
+      </div>
+      <div class="notation-card">
+        <h3>Colour guide</h3>
+        <p><span class="heat-high" style="color:#ff9e6d">Orange values</span> — high relative to that column's range</p>
+        <p style="margin-top:0.4rem"><span style="color:#6dbfff">Blue values</span> — low relative to that column's range</p>
+        <p style="margin-top:0.4rem"><span class="success">Hover a column</span> to highlight it across all rows — useful when columns have very different scales.</p>
+        <p style="margin-top:0.6rem">Notice how some columns have much larger numbers than others. That's exactly why standardisation (step 3) matters.</p>
+      </div>
+    `;
+    notationSection.appendChild(notationRow);
+    content.appendChild(notationSection);
+
+    // -- Column statistics --
+    const colStatsSection = document.createElement('div');
+    colStatsSection.innerHTML = `<div class="section-title">Column statistics</div>`;
+    const colTable = document.createElement('table');
+    colTable.className = 'col-stats-table';
+    colTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Mean</th>
+          <th>Std dev</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Distribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${colStats.map(c => `
+          <tr>
+            <td>${c.name}</td>
+            <td>${formatNum(c.mean)}</td>
+            <td>${formatNum(c.std)}</td>
+            <td>${formatNum(c.min)}</td>
+            <td>${formatNum(c.max)}</td>
+            <td>${sparkline(c.vals)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+    const colTableWrap = document.createElement('div');
+    colTableWrap.className = 'table-wrap';
+    colTableWrap.appendChild(colTable);
+    colStatsSection.appendChild(colTableWrap);
+    content.appendChild(colStatsSection);
+
+    // -- Why standardise explainer --
+    const stdExpl = document.createElement('div');
+    stdExpl.className = 'explainer';
+    stdExpl.innerHTML = `
+      <h2>Why we can't use this matrix directly</h2>
+      <p>Look at the standard deviations above. If one column has values in the hundreds and another in the single digits, PCA will be dominated by the large-scale column — not because it's more important, but simply because it's bigger.</p>
+      <p>The fix is <strong style="color:#fff">standardisation</strong>: subtract the mean and divide by the standard deviation for each column. This transforms every column to have mean 0 and standard deviation 1, so they all contribute equally.</p>
+      <div class="math">z<sub>ij</sub> = (x<sub>ij</sub> − μ<sub>j</sub>) / σ<sub>j</sub></div>
+      <p>That's step 3. Your matrix <strong style="color:#fff">X</strong> becomes a standardised matrix <strong style="color:#fff">Z</strong>, and PCA runs on <strong style="color:#fff">Z</strong>.</p>
+    `;
+    content.appendChild(stdExpl);
+
+    // -- CTA --
+    const cta = document.createElement('div');
+    cta.className = 'cta-row';
+    cta.innerHTML = `
+      <button class="btn btn-primary" onclick="window.location.href='standardise.html'">Proceed to standardisation →</button>
+      <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Back to upload</button>
+    `;
+    content.appendChild(cta);
+  }
+
+  function formatNum(v) {
+    if (Math.abs(v) >= 1000) return v.toLocaleString('en-GB', { maximumFractionDigits: 1 });
+    if (Math.abs(v) >= 10)   return v.toFixed(2);
+    if (Math.abs(v) >= 0.01) return v.toFixed(4);
+    return v.toExponential(2);
+  }
+
+  function sparkline(vals) {
+    const bins = 12;
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    const counts = new Array(bins).fill(0);
+    vals.forEach(v => {
+      const b = Math.min(bins - 1, Math.floor(((v - min) / range) * bins));
+      counts[b]++;
+    });
+    const maxCount = Math.max(...counts);
+    const bars = counts.map(c => {
+      const h = Math.round((c / maxCount) * 18);
+      return `<div class="spark-bar" style="height:${Math.max(2,h)}px"></div>`;
+    }).join('');
+    return `<div class="spark">${bars}</div>`;
+  }
+</script>
+</body>
+</html>
