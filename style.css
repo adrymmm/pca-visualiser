@@ -6,9 +6,9 @@
 
 /* ── Design tokens ── */
 :root {
-  --bg:           #ffffff;
-  --bg-2:         #f7f7f5;
-  --bg-3:         #efefed;
+  --bg:           #faf9f7;
+  --bg-2:         #f4f3f0;
+  --bg-3:         #eceae6;
   --border:       rgba(0,0,0,0.10);
   --border-strong:rgba(0,0,0,0.18);
   --text:         #111111;
