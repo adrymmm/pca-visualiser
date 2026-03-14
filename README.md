@@ -1,3 +1,5 @@
+**[Live demo →](https://adrymmm.github.io/pca-visualiser)**
+
 # PCA Visualiser
 
 Interactive exposition of Principal Component Analysis. Upload a CSV and step through the algorithm on your own data, with plain-English intuition and NumPy equivalents at each stage.
