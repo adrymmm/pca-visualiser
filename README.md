@@ -1,4 +1,4 @@
-**[Live demo →](https://adrymmm.github.io/pca-visualiser)**
+## [Live demo →](https://adrymmm.github.io/pca-visualiser)
 
 # PCA Visualiser
 
