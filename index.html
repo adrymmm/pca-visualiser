@@ -8,54 +8,149 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* index.html — unique styles only */
+    /* ── Single-page layout ── */
+    .page-section { display: none; }
+    .page-section.visible { display: block; }
+
+    .section-sep {
+      border: none;
+      border-top: 2px solid var(--border);
+      margin: 3.5rem 0;
+    }
+
+    .step-heading {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 2rem;
+    }
+
+    .step-heading .step-num-lg {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .step-heading h2 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 400;
+      font-family: var(--mono);
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .step-heading h2 span { color: var(--accent); font-style: italic; }
+
+    /* Upload */
     .upload-zone {
       border: 1.5px dashed var(--border-strong);
       border-radius: 8px;
-      padding: 3.5rem 2rem;
+      padding: 3rem 2rem;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
       background: var(--bg-2);
       position: relative;
     }
-    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-glow); }
-    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-icon { width: 48px; height: 48px; margin: 0 auto 1.2rem; display: block; opacity: 0.4; }
-    .upload-label { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
-    .upload-hint  { font-size: 0.85rem; color: var(--text-muted); font-family: var(--mono); }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { width: 40px; height: 40px; margin: 0 auto 1rem; display: block; opacity: 0.35; }
+    .upload-label { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+    .upload-hint  { font-size: 0.82rem; color: var(--text-muted); font-family: var(--mono); }
 
-    .section { margin-top: 2.5rem; display: none; }
-    .section.visible { display: block; }
+    /* Matrix table */
+    .matrix-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-2); }
+    .mx-table { border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; white-space: nowrap; }
+    .mx-table .row-idx { background: var(--bg-3); color: var(--text-faint); padding: 0.5rem 0.8rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: right; font-size: 11px; }
+    .mx-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.6rem 1rem; text-align: center; border-bottom: 1px solid var(--border-strong); border-right: 1px solid var(--border); font-size: 11px; letter-spacing: 0.06em; }
+    .mx-table th.corner { min-width: 40px; border-right: 1px solid var(--border-strong); }
+    .mx-table th:last-child { border-right: none; }
+    .mx-table td { padding: 0.45rem 1rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: right; }
+    .mx-table td:last-child { border-right: none; }
+    .mx-table tr:last-child td { border-bottom: none; }
+    .mx-table td.heat-high { color: #b8860b; }
+    .mx-table td.heat-low  { color: #2c5282; }
+    .mx-table td.heat-mid  { color: var(--text); }
+    .mx-table tr:hover td  { background: rgba(44,82,130,0.04); }
+    .truncation-note { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 0.6rem; text-align: center; }
 
-    .issues { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-    .issue-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-    .issue-row:last-child { border-bottom: none; }
-    .issue-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-    .issue-dot.error { background: var(--danger); }
-    .issue-dot.warn  { background: var(--warn); }
-    .issue-dot.ok    { background: var(--success); }
-    .issue-text { color: var(--text); line-height: 1.5; }
-    .issue-sub  { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    /* Notation cards */
+    .notation-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 2.5rem; }
+    .notation-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 1.2rem; }
+    .notation-card h3 { font-size: 12px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; }
+    .notation-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
+    .notation-card .accent  { color: var(--accent); }
+    .notation-card .success { color: var(--success); }
 
-    .col-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    .col-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); }
-    .col-table td { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-    .col-table tr:last-child td { border-bottom: none; }
-    .col-table tr:hover td { background: rgba(255,255,255,0.025); }
+    /* Covariance heatmap */
+    .cov-wrap { overflow-x: auto; margin-bottom: 1.5rem; }
+    .cov-table { border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; white-space: nowrap; }
+    .cov-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.55rem 0.9rem; text-align: center; border-bottom: 1px solid var(--border-strong); border-right: 1px solid var(--border); font-size: 10px; letter-spacing: 0.06em; }
+    .cov-table th:first-child { text-align: left; border-right: 1px solid var(--border-strong); min-width: 100px; }
+    .cov-table th:last-child { border-right: none; }
+    .cov-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: right; cursor: pointer; transition: filter 0.1s; }
+    .cov-table td:first-child { font-size: 11px; color: var(--text-muted); text-align: left; background: var(--bg-3); border-right: 1px solid var(--border-strong); cursor: default; }
+    .cov-table td:last-child { border-right: none; }
+    .cov-table tr:last-child td { border-bottom: none; }
+    .cov-table td:hover { filter: brightness(0.9); }
+    .cov-table td.diagonal { outline: 1.5px solid rgba(44,82,130,0.4); outline-offset: -1.5px; }
 
-    .missing-bar { display: flex; align-items: center; gap: 8px; }
-    .bar-track { flex: 1; height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 2px; background: var(--success); transition: width 0.6s ease; }
-    .bar-fill.has-missing { background: var(--warn); }
+    .cov-tooltip {
+      position: fixed; background: var(--bg-2); border: 1px solid var(--border-strong);
+      border-radius: 6px; padding: 0.7rem 1rem; font-family: var(--mono); font-size: 12px;
+      color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.15s;
+      z-index: 100; max-width: 240px; line-height: 1.6;
+    }
+    .cov-tooltip.visible { opacity: 1; }
+    .cov-tooltip .tt-vars { color: var(--accent); margin-bottom: 4px; font-size: 11px; }
+    .cov-tooltip .tt-val  { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+    .cov-tooltip .tt-interp { color: var(--text-muted); font-size: 11px; }
 
-    .preview-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-family: var(--mono); }
-    .preview-table th { background: var(--bg-3); color: var(--text-muted); padding: 0.5rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 0.06em; white-space: nowrap; }
-    .preview-table td { padding: 0.45rem 0.85rem; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
-    .preview-table tr:last-child td { border-bottom: none; }
-    .preview-table td.is-missing { color: var(--danger); }
-    .preview-table td.is-text    { color: var(--warn); }
-    .overflow-x { overflow-x: auto; }
+    .heatmap-legend {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 2rem;
+      font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    }
+    .legend-bar { flex: 1; max-width: 200px; height: 8px; border-radius: 4px; background: linear-gradient(to right, #6dbfff, var(--bg-3), #ff9e6d); }
+
+    /* Interp cards */
+    .interp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 2.5rem; }
+    .interp-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+    .interp-swatch { width: 28px; height: 6px; border-radius: 3px; margin-bottom: 0.6rem; }
+    .interp-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+    .interp-body  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; font-family: var(--mono); }
+
+    /* Eigen placeholder */
+    .eigen-placeholder {
+      background: var(--bg-2);
+      border: 1px dashed var(--border-strong);
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+    }
+    .eigen-placeholder strong { color: var(--accent); }
+
+    @media (max-width: 640px) {
+      .interp-row { grid-template-columns: 1fr; }
+      .notation-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -67,173 +162,275 @@
     <p class="subtitle">Upload your dataset and walk through PCA step by step — from raw data to eigenvectors, with your own numbers at every stage.</p>
   </header>
 
-  <!-- Steps nav -->
-  <nav class="steps-nav">
-    <div class="step-item active" id="nav-1">
-      <div class="step-num">1</div> Upload &amp; validate
+  <nav class="steps-nav" id="steps-nav">
+    <div class="step-item active" data-step="1" onclick="scrollToStep(1)">
+      <div class="step-num">1</div> Upload
     </div>
-    <div class="step-item" id="nav-2">
+    <div class="step-item" data-step="2" onclick="scrollToStep(2)">
       <div class="step-num">2</div> Data matrix
     </div>
-    <div class="step-item" id="nav-3">
-      <div class="step-num">3</div> Covariance
+    <div class="step-item" data-step="3" onclick="scrollToStep(3)">
+      <div class="step-num">3</div> Standardise
     </div>
-    <div class="step-item" id="nav-4">
-      <div class="step-num">4</div> Eigen decomposition
+    <div class="step-item" data-step="4" onclick="scrollToStep(4)">
+      <div class="step-num">4</div> Covariance
     </div>
-    <div class="step-item" id="nav-5">
-      <div class="step-num">5</div> Projection
+    <div class="step-item" data-step="5" onclick="scrollToStep(5)">
+      <div class="step-num">5</div> Eigen decomp
     </div>
   </nav>
 
-  <!-- Upload zone -->
-  <div class="upload-zone" id="dropzone">
-    <input type="file" accept=".csv" id="file-input" />
-    <svg class="upload-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="10" width="36" height="28" rx="3" stroke="currentColor" stroke-width="2"/>
-      <path d="M24 34V20M24 20L18 26M24 20L30 26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M14 10V8a2 2 0 012-2h16a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
-    </svg>
-    <div class="upload-label">Drop your CSV here, or click to browse</div>
-    <div class="upload-hint">Comma-separated values · any size · numeric data preferred</div>
-  </div>
-
-  <!-- Loading state -->
-  <div class="section" id="section-loading">
-    <div class="loader">
-      <div class="spinner"></div>
-      <span id="loading-text">Parsing file...</span>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 1: UPLOAD                                      -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-1" class="page-section visible">
+    <div class="upload-zone" id="dropzone">
+      <input type="file" accept=".csv" id="file-input" />
+      <svg class="upload-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="10" width="36" height="28" rx="3" stroke="currentColor" stroke-width="2"/>
+        <path d="M24 34V20M24 20L18 26M24 20L30 26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 10V8a2 2 0 012-2h16a2 2 0 012 2v2" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <div class="upload-label">Drop your CSV here, or click to browse</div>
+      <div class="upload-hint">Comma-separated values · numeric columns required for PCA</div>
     </div>
-  </div>
 
-  <!-- Stats -->
-  <div class="section" id="section-stats">
-    <div class="section-title">Dataset overview</div>
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">rows</div>
-        <div class="stat-value" id="stat-rows">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">columns</div>
-        <div class="stat-value" id="stat-cols">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">numeric cols</div>
-        <div class="stat-value" id="stat-numeric">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">missing values</div>
-        <div class="stat-value" id="stat-missing">—</div>
+    <div id="upload-result" style="display:none">
+      <div id="upload-verdict" style="margin-top:1.5rem"></div>
+      <div class="cta-row" id="upload-cta" style="display:none">
+        <button class="btn btn-primary" id="btn-proceed-matrix">Proceed to data matrix →</button>
+        <button class="btn btn-ghost" onclick="location.reload()">Upload different file</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Preview -->
-  <div class="section" id="section-preview">
-    <div class="section-title">First 5 rows</div>
-    <div class="table-wrap overflow-x" id="preview-container"></div>
-  </div>
-
-  <!-- Column analysis -->
-  <div class="section" id="section-columns">
-    <div class="section-title">Column analysis</div>
-    <div class="table-wrap">
-      <table class="col-table">
-        <thead>
-          <tr>
-            <th>Column</th>
-            <th>Type</th>
-            <th>Missing</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="col-tbody"></tbody>
-      </table>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 2: DATA MATRIX                                 -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-2" class="page-section">
+    <hr class="section-sep" />
+    <div class="step-heading">
+      <div class="step-num-lg">2</div>
+      <h2>The data <span>matrix</span></h2>
     </div>
-  </div>
 
-  <!-- Issues -->
-  <div class="section" id="section-issues">
-    <div class="section-title">Validation checks</div>
-    <div class="issues" id="issues-list"></div>
-  </div>
+    <div class="explainer">
+      <h2>What is this matrix?</h2>
+      <p>Every row is one observation. Every column is one variable. Together they form the matrix <strong style="color:var(--text)">X</strong> — the starting point for PCA.</p>
+      <div class="math" id="matrix-shape-formula">X ∈ ℝ<sup>n×p</sup></div>
+      <p>PCA finds new directions in this p-dimensional space that capture the most variance. But first — look at your raw numbers.</p>
+    </div>
 
-  <!-- Verdict -->
-  <div class="section" id="section-verdict">
-    <div id="verdict-box"></div>
+    <div class="section-title">Matrix X</div>
+    <div id="matrix-view-wrap" style="margin-bottom:2.5rem"></div>
+
+    <div class="section-title">How to read this</div>
+    <div class="notation-row" id="notation-cards">
+      <div class="notation-card">
+        <h3>Notation</h3>
+        <p><span class="accent">X</span> — the full matrix, shape n×p</p>
+        <p><span class="accent">x<sub>ij</sub></span> — value at row <em>i</em>, column <em>j</em></p>
+        <p><span class="accent">x<sub>j</sub></span> — the j-th column (one variable across all observations)</p>
+      </div>
+      <div class="notation-card">
+        <h3>Colour guide</h3>
+        <p><span style="color:#b8860b">Orange values</span> — high relative to that column's range</p>
+        <p style="margin-top:0.4rem"><span style="color:#2c5282">Blue values</span> — low relative to that column's range</p>
+        <p style="margin-top:0.6rem"><span class="success">Notice:</span> some columns may have much larger numbers than others — that's why standardisation matters.</p>
+      </div>
+    </div>
+
+    <div class="explainer">
+      <h2>Why we can't use this matrix directly</h2>
+      <p>PCA finds directions of maximum variance. If one column has values in the thousands and another in the single digits, PCA will be dominated by the large-scale column — not because it's more important, but because its numbers are bigger.</p>
+      <p>The fix is <strong style="color:var(--text)">standardisation</strong>: subtract the mean and divide by the standard deviation for each column. Every column ends up with mean 0 and standard deviation 1.</p>
+      <div class="math">z<sub>ij</sub> = (x<sub>ij</sub> − μ<sub>j</sub>) / σ<sub>j</sub></div>
+    </div>
+
     <div class="cta-row">
-      <button class="btn btn-primary" id="btn-proceed" disabled>
-        Proceed to data matrix →
-      </button>
-      <button class="btn btn-ghost" id="btn-reset">Upload different file</button>
+      <button class="btn btn-primary" onclick="showSection(3)">Proceed to standardisation →</button>
     </div>
-  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 3: STANDARDISATION                             -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-3" class="page-section">
+    <hr class="section-sep" />
+    <div class="step-heading">
+      <div class="step-num-lg">3</div>
+      <h2>Standard<span>isation</span></h2>
+    </div>
+
+    <div class="explainer">
+      <h2>Putting every variable on equal footing</h2>
+      <p>For each column <em>j</em>, we subtract its mean and divide by its standard deviation:</p>
+      <div class="math">z<sub>ij</sub> = (x<sub>ij</sub> − μ<sub>j</sub>) / σ<sub>j</sub></div>
+      <p>After this transform, every column has <strong style="color:var(--text)">mean = 0</strong> and <strong style="color:var(--text)">std = 1</strong>. PCA can then measure variance fairly across all features.</p>
+    </div>
+
+    <div class="section-title" id="std-before-after-title">Before vs after — first rows</div>
+    <div class="side-by-side" id="std-panels" style="margin-bottom:2.5rem"></div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:2.5rem;text-align:center">
+      Orange = more than 1σ above mean &nbsp;·&nbsp; Blue = more than 1σ below mean &nbsp;·&nbsp; all values now dimensionless
+    </p>
+
+    <div class="explainer">
+      <h2>What we have now</h2>
+      <p>Matrix <strong style="color:var(--text)">Z</strong> — where every column has mean 0 and standard deviation 1. The data is now scale-invariant.</p>
+      <p>Next: we compute the <strong style="color:var(--text)">covariance matrix</strong> of Z — a p×p matrix that captures how much every pair of variables moves together. It's the heart of PCA.</p>
+      <div class="math">Σ = (1/(n−1)) · Zᵀ Z</div>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="showSection(4)">Proceed to covariance matrix →</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 4: COVARIANCE MATRIX                           -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-4" class="page-section">
+    <hr class="section-sep" />
+    <div class="step-heading">
+      <div class="step-num-lg">4</div>
+      <h2>Covariance <span>matrix</span></h2>
+    </div>
+
+    <div class="explainer">
+      <h2>What is a covariance matrix?</h2>
+      <p>Each entry C<sub>ij</sub> measures how much variables <em>i</em> and <em>j</em> vary together. If large values of variable <em>i</em> tend to appear with large values of variable <em>j</em>, their covariance is positive. If they move in opposite directions, it's negative.</p>
+      <div class="math" id="cov-shape-formula">C = (1 / (n−1)) · Zᵀ Z</div>
+      <p>Because we standardised first, the diagonal entries are all exactly 1 (variance of each standardised variable). The off-diagonal entries are the Pearson correlations between pairs of variables.</p>
+      <p>PCA will decompose this matrix into <strong style="color:var(--text)">eigenvectors</strong> (principal directions) and <strong style="color:var(--text)">eigenvalues</strong> (how much variance each direction explains).</p>
+    </div>
+
+    <div class="section-title">Σ — covariance matrix (hover to inspect)</div>
+    <div class="cov-wrap" id="cov-table-wrap"></div>
+    <div class="heatmap-legend">
+      <span>negative covariance</span>
+      <div class="legend-bar"></div>
+      <span>positive covariance</span>
+      &nbsp;·&nbsp;
+      <span style="color:var(--accent)">■</span>
+      <span>diagonal = variance (= 1 after standardisation)</span>
+    </div>
+
+    <div class="section-title">How to read each cell</div>
+    <div class="interp-row">
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:#6dbfff"></div>
+        <div class="interp-title">Negative covariance</div>
+        <div class="interp-body">When one variable goes up, the other tends to go down. They move in opposite directions across observations.</div>
+      </div>
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:var(--bg-3);border:1px solid var(--border)"></div>
+        <div class="interp-title">Near-zero covariance</div>
+        <div class="interp-body">The two variables are roughly independent — knowing one tells you little about the other.</div>
+      </div>
+      <div class="interp-card">
+        <div class="interp-swatch" style="background:#ff9e6d"></div>
+        <div class="interp-title">Positive covariance</div>
+        <div class="interp-body">When one variable goes up, the other tends to also go up. They carry overlapping information.</div>
+      </div>
+    </div>
+
+    <div class="explainer">
+      <h2>Key properties of this matrix</h2>
+      <p><strong style="color:var(--text)">Symmetric</strong> — C[i,j] always equals C[j,i]. The covariance between height and weight is the same as between weight and height.</p>
+      <p><strong style="color:var(--text)">Positive semi-definite</strong> — all eigenvalues will be ≥ 0. This is why PCA always produces real, non-negative variance explained values.</p>
+      <p><strong style="color:var(--text)">Diagonal = 1</strong> — because we standardised. Without this, PCA would be dominated by whichever variable happens to have the largest scale.</p>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="showSection(5)">Proceed to eigen decomposition →</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 5: EIGEN DECOMPOSITION (placeholder)           -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-5" class="page-section">
+    <hr class="section-sep" />
+    <div class="step-heading">
+      <div class="step-num-lg">5</div>
+      <h2>Eigen <span>decomposition</span></h2>
+    </div>
+
+    <div class="explainer">
+      <h2>What comes next</h2>
+      <p>We decompose the covariance matrix C into its <strong style="color:var(--text)">eigenvectors</strong> and <strong style="color:var(--text)">eigenvalues</strong>:</p>
+      <div class="math">C = V Λ Vᵀ</div>
+      <p>Each eigenvector <strong style="color:var(--text)">v<sub>k</sub></strong> defines a principal component — a direction in your original p-dimensional space. The corresponding eigenvalue <strong style="color:var(--text)">λ<sub>k</sub></strong> tells you how much variance is explained in that direction.</p>
+      <p>The first principal component is the direction of greatest variance. The second is perpendicular to the first, and explains the next most variance — and so on. Together, a handful of components often capture the vast majority of the structure in your data.</p>
+    </div>
+
+    <div class="eigen-placeholder" id="eigen-content">
+      <strong>Eigen decomposition visualisation coming soon.</strong><br />
+      <span style="font-size:0.8rem;margin-top:0.5rem;display:block">Upload data above and proceed through the steps — this section will populate once implemented.</span>
+    </div>
+  </section>
 
 </div>
 
+<div class="cov-tooltip" id="tooltip"></div>
+
 <script>
+  // ── State ──────────────────────────────────────────────
+  const state = {};
+  let maxVisibleStep = 1;
+
+  // ── Nav ────────────────────────────────────────────────
+  function setNavStep(step, status) {
+    const item = document.querySelector(`[data-step="${step}"]`);
+    if (!item) return;
+    item.classList.remove('active', 'done');
+    if (status === 'active') item.classList.add('active');
+    if (status === 'done')   item.classList.add('done');
+    // Mark completed check
+    const num = item.querySelector('.step-num');
+    if (status === 'done') num.textContent = '✓';
+    else num.textContent = step;
+  }
+
+  function scrollToStep(step) {
+    if (step > maxVisibleStep) return;
+    const el = document.getElementById('s-' + step);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function showSection(step) {
+    const el = document.getElementById('s-' + step);
+    if (!el) return;
+    el.classList.add('visible', 'fade-in');
+    maxVisibleStep = Math.max(maxVisibleStep, step);
+
+    // Update nav
+    for (let i = 1; i < step; i++) setNavStep(i, 'done');
+    setNavStep(step, 'active');
+
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  // ── Upload ─────────────────────────────────────────────
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('file-input');
 
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
   dropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropzone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) processFile(f);
   });
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) processFile(fileInput.files[0]);
-  });
-
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    location.reload();
-  });
-
-  document.getElementById('btn-proceed').addEventListener('click', () => {
-    if (!window._pcaData) return;
-    const { numericCols, rows } = window._pcaData;
-    const cleanRows = rows.filter(r =>
-      numericCols.every((col, _) => {
-        const v = r[col._origIdx];
-        return v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && v !== 'N/A';
-      })
-    );
-    const matrix = cleanRows.map(r => numericCols.map(col => parseFloat(r[col._origIdx])));
-    const headers = numericCols.map(c => c.name);
-    localStorage.setItem('pca_matrix', JSON.stringify({ headers, matrix }));
-    window.location.href = 'matrix.html';
-  });
-
-  function show(id) {
-    const el = document.getElementById(id);
-    el.classList.add('visible', 'fade-in');
-  }
-
-  function hide(id) {
-    document.getElementById(id).classList.remove('visible');
-  }
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
 
   function processFile(file) {
-    if (!file.name.endsWith('.csv')) {
-      alert('Please upload a .csv file.');
-      return;
-    }
-
-    show('section-loading');
-
+    if (!file.name.endsWith('.csv')) { alert('Please upload a .csv file.'); return; }
     const reader = new FileReader();
     reader.onload = e => {
-      setTimeout(() => {
-        document.getElementById('loading-text').textContent = 'Analysing columns...';
-        setTimeout(() => {
-          const result = parseAndAnalyse(e.target.result);
-          render(result);
-        }, 400);
-      }, 300);
+      const result = parseAndAnalyse(e.target.result);
+      renderUploadResult(result);
     };
     reader.readAsText(file);
   }
@@ -242,10 +439,8 @@
     const lines = text.trim().split('\n').filter(l => l.trim());
     if (lines.length < 2) return null;
     const parse = line => {
-      const cells = [];
-      let cur = '', inQ = false;
-      for (let i = 0; i < line.length; i++) {
-        const c = line[i];
+      const cells = []; let cur = '', inQ = false;
+      for (const c of line) {
         if (c === '"') { inQ = !inQ; }
         else if (c === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
         else cur += c;
@@ -253,211 +448,293 @@
       cells.push(cur.trim());
       return cells;
     };
-    const headers = parse(lines[0]);
-    const rows = lines.slice(1).map(parse);
-    return { headers, rows };
-  }
-
-  function inferType(values) {
-    const nonEmpty = values.filter(v => v !== '' && v !== null && v !== undefined);
-    if (nonEmpty.length === 0) return 'empty';
-    const numericCount = nonEmpty.filter(v => !isNaN(parseFloat(v)) && isFinite(v)).length;
-    const ratio = numericCount / nonEmpty.length;
-    if (ratio >= 0.9) return 'numeric';
-    if (ratio >= 0.4) return 'mixed';
-    return 'text';
+    return { headers: parse(lines[0]), rows: lines.slice(1).map(parse) };
   }
 
   function parseAndAnalyse(text) {
     const parsed = parseCSV(text);
-    if (!parsed) return { error: 'Could not parse file. Make sure it is valid CSV.' };
-
+    if (!parsed) return { error: 'Could not parse CSV.' };
     const { headers, rows } = parsed;
-    const nRows = rows.length;
-    const nCols = headers.length;
-
-    const columns = headers.map((h, i) => {
-      const vals = rows.map(r => r[i] !== undefined ? r[i] : '');
-      const missing = vals.filter(v => v === '' || v === 'NA' || v === 'NaN' || v === 'null' || v === 'NULL' || v === 'N/A').length;
-      const type = inferType(vals);
-      return { name: h, type, missing, total: nRows, vals, _origIdx: i };
-    });
-
-    const numericCols = columns.filter(c => c.type === 'numeric');
-    const totalMissing = columns.reduce((s, c) => s + c.missing, 0);
-    const preview = rows.slice(0, 5);
-
-    return { headers, rows, nRows, nCols, columns, numericCols, totalMissing, preview };
+    const n = rows.length;
+    const isNumeric = v => v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && !isNaN(parseFloat(v));
+    const numericCols = headers.map((h, i) => {
+      const vals = rows.map(r => r[i] ?? '');
+      const numOk = vals.filter(isNumeric).length;
+      return numOk / vals.length >= 0.9 ? { name: h, idx: i } : null;
+    }).filter(Boolean);
+    return { headers, rows, n, numericCols };
   }
 
-  function render(data) {
-    window._pcaData = data;
-    hide('section-loading');
+  function renderUploadResult(data) {
+    const resultDiv = document.getElementById('upload-result');
+    const verdictDiv = document.getElementById('upload-verdict');
+    const ctaDiv = document.getElementById('upload-cta');
+    resultDiv.style.display = 'block';
 
     if (data.error) {
-      show('section-issues');
-      document.getElementById('issues-list').innerHTML = `
-        <div class="issue-row">
-          <div class="issue-dot error"></div>
-          <div><div class="issue-text">${data.error}</div></div>
-        </div>`;
+      verdictDiv.innerHTML = `<div class="verdict not-ready"><div class="verdict-icon">✕</div><div><div class="verdict-title">Parse error</div><div class="verdict-body">${data.error}</div></div></div>`;
       return;
     }
 
-    const { headers, nRows, nCols, columns, numericCols, totalMissing, preview } = data;
+    const { n, numericCols } = data;
+    const p = numericCols.length;
+    const ok = p >= 2 && n >= 5;
+    const cls  = ok ? 'ready' : 'not-ready';
+    const icon = ok ? '✓' : '✕';
+    const title = ok ? 'Dataset is ready for PCA' : 'Dataset is not suitable for PCA';
+    const body  = ok
+      ? `${p} numeric column${p !== 1 ? 's' : ''} · ${n} rows`
+      : `Need ≥ 2 numeric columns and ≥ 5 rows. Found ${p} numeric column${p !== 1 ? 's' : ''} and ${n} rows.`;
 
-    // Stats
-    const missingEl = document.getElementById('stat-missing');
-    document.getElementById('stat-rows').textContent = nRows.toLocaleString();
-    document.getElementById('stat-cols').textContent = nCols;
-    document.getElementById('stat-numeric').textContent = numericCols.length;
-    missingEl.textContent = totalMissing;
-    if (totalMissing > 0) missingEl.classList.add('warn');
-    else missingEl.classList.add('good');
-    show('section-stats');
-
-    // Preview
-    const previewHTML = `
-      <table class="preview-table">
-        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>
-          ${preview.map(row =>
-            `<tr>${row.map((cell, i) => {
-              const isMissing = cell === '' || cell === 'NA' || cell === 'NaN' || cell === 'null' || cell === 'NULL' || cell === 'N/A';
-              const col = columns[i];
-              const isText = col && col.type === 'text';
-              const cls = isMissing ? 'is-missing' : (isText ? 'is-text' : '');
-              return `<td class="${cls}">${isMissing ? 'missing' : cell}</td>`;
-            }).join('')}</tr>`
-          ).join('')}
-        </tbody>
-      </table>`;
-    document.getElementById('preview-container').innerHTML = previewHTML;
-    show('section-preview');
-
-    // Column table
-    const tbody = document.getElementById('col-tbody');
-    tbody.innerHTML = columns.map(col => {
-      const missingPct = ((col.missing / col.total) * 100).toFixed(1);
-      const fillPct = (100 - parseFloat(missingPct)).toFixed(1);
-      const barClass = col.missing > 0 ? 'has-missing' : '';
-      const typePill = `<span class="pill ${col.type}">${col.type}</span>`;
-      const action = col.type === 'numeric'
-        ? `<span class="pill keep">keep</span>`
-        : `<span class="pill drop">drop</span>`;
-      return `
-        <tr>
-          <td style="font-family:var(--mono)">${col.name}</td>
-          <td>${typePill}</td>
-          <td>
-            <div class="missing-bar">
-              <div class="bar-track"><div class="bar-fill ${barClass}" style="width:${fillPct}%"></div></div>
-              <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);min-width:36px">${col.missing > 0 ? col.missing + ' missing' : 'clean'}</span>
-            </div>
-          </td>
-          <td>${action}</td>
-        </tr>`;
-    }).join('');
-    show('section-columns');
-
-    // Issues
-    const issues = buildIssues(data);
-    document.getElementById('issues-list').innerHTML = issues.map(iss => `
-      <div class="issue-row">
-        <div class="issue-dot ${iss.type}"></div>
+    verdictDiv.innerHTML = `
+      <div class="verdict ${cls}">
+        <div class="verdict-icon">${icon}</div>
         <div>
-          <div class="issue-text">${iss.text}</div>
-          ${iss.sub ? `<div class="issue-sub">${iss.sub}</div>` : ''}
-        </div>
-      </div>`).join('');
-    show('section-issues');
-
-    // Verdict
-    const verdict = computeVerdict(data);
-    document.getElementById('verdict-box').innerHTML = `
-      <div class="verdict ${verdict.cls}">
-        <div class="verdict-icon">${verdict.icon}</div>
-        <div>
-          <div class="verdict-title">${verdict.title}</div>
-          <div class="verdict-body">${verdict.body}</div>
+          <div class="verdict-title">${title}</div>
+          <div class="verdict-body">${body}</div>
         </div>
       </div>`;
-    show('section-verdict');
 
-    if (verdict.canProceed) {
-      document.getElementById('btn-proceed').disabled = false;
-    }
-
-    document.getElementById('nav-1').classList.remove('active');
-    document.getElementById('nav-1').classList.add('done');
-  }
-
-  function buildIssues(data) {
-    const { nRows, nCols, columns, numericCols, totalMissing } = data;
-    const issues = [];
-
-    if (numericCols.length >= 2) {
-      issues.push({ type: 'ok', text: `${numericCols.length} numeric columns found — sufficient for PCA.`, sub: numericCols.map(c => c.name).join(' · ') });
-    } else {
-      issues.push({ type: 'error', text: `Only ${numericCols.length} numeric column(s). PCA requires at least 2.`, sub: 'Add more numeric data or check column types.' });
-    }
-
-    if (nRows >= 10) {
-      issues.push({ type: 'ok', text: `${nRows} rows — enough observations to proceed.` });
-    } else if (nRows >= 5) {
-      issues.push({ type: 'warn', text: `Only ${nRows} rows. Results may be unstable with very few observations.` });
-    } else {
-      issues.push({ type: 'error', text: `Only ${nRows} rows. PCA is not meaningful with fewer than 5 observations.` });
-    }
-
-    if (nRows < numericCols.length) {
-      issues.push({ type: 'warn', text: 'More columns than rows — covariance matrix may be singular.', sub: 'Consider using fewer components or collecting more data.' });
-    }
-
-    if (totalMissing === 0) {
-      issues.push({ type: 'ok', text: 'No missing values detected — data is clean.' });
-    } else {
-      const rowsAffected = data.rows.filter(r => r.some(v => v === '' || v === 'NA' || v === 'NaN')).length;
-      issues.push({ type: 'warn', text: `${totalMissing} missing values across ${rowsAffected} row(s).`, sub: 'Affected rows will be dropped before PCA runs.' });
-    }
-
-    const textCols = columns.filter(c => c.type === 'text' || c.type === 'mixed');
-    if (textCols.length > 0) {
-      issues.push({ type: 'warn', text: `${textCols.length} non-numeric column(s) will be excluded.`, sub: textCols.map(c => c.name).join(' · ') });
-    }
-
-    return issues;
-  }
-
-  function computeVerdict(data) {
-    const { nRows, numericCols } = data;
-    const hasEnoughCols = numericCols.length >= 2;
-    const hasEnoughRows = nRows >= 5;
-
-    if (!hasEnoughCols || !hasEnoughRows) {
-      return {
-        cls: 'not-ready', icon: '✕',
-        title: 'Dataset is not suitable for PCA',
-        body: 'Fix the issues above before proceeding.',
-        canProceed: false
+    if (ok) {
+      ctaDiv.style.display = 'flex';
+      document.getElementById('btn-proceed-matrix').onclick = () => {
+        // Build numeric matrix
+        const cleanRows = data.rows.filter(r =>
+          numericCols.every(col => {
+            const v = r[col.idx];
+            return v !== '' && v !== 'NA' && v !== 'NaN' && v !== 'null' && v !== 'NULL' && !isNaN(parseFloat(v));
+          })
+        );
+        state.headers = numericCols.map(c => c.name);
+        state.matrix  = cleanRows.map(r => numericCols.map(c => parseFloat(r[c.idx])));
+        renderMatrixSection();
+        showSection(2);
       };
     }
+  }
 
-    if (nRows < 30 || nRows < numericCols.length) {
-      return {
-        cls: 'caution', icon: '△',
-        title: 'PCA is possible, but proceed with caution',
-        body: `${numericCols.length} numeric columns · ${nRows} rows · results may be sensitive to outliers`,
-        canProceed: true
-      };
+  // ── Step 2: Matrix ─────────────────────────────────────
+  function renderMatrixSection() {
+    const { headers, matrix } = state;
+    const n = matrix.length, p = headers.length;
+
+    // Update formula
+    document.getElementById('matrix-shape-formula').innerHTML =
+      `X ∈ ℝ<sup>${n}×${p}</sup>   (${n} observations, ${p} features)`;
+
+    // Build truncated table
+    const MAX_ROWS = 15, MAX_COLS = 10;
+    const showRows = Math.min(n, MAX_ROWS), showCols = Math.min(p, MAX_COLS);
+
+    // Per-column min/max for heat
+    const colMins = [], colMaxs = [];
+    for (let j = 0; j < showCols; j++) {
+      const vals = matrix.slice(0, showRows).map(r => r[j]);
+      colMins[j] = Math.min(...vals); colMaxs[j] = Math.max(...vals);
     }
 
-    return {
-      cls: 'ready', icon: '✓',
-      title: 'Dataset is ready for PCA',
-      body: `${numericCols.length} numeric columns · ${nRows} rows · looks good to go`,
-      canProceed: true
+    let thead = '<thead><tr><th class="corner row-idx"></th>';
+    for (let j = 0; j < showCols; j++) thead += `<th>${headers[j]}</th>`;
+    if (p > MAX_COLS) thead += `<th style="color:var(--text-faint)">…</th>`;
+    thead += '</tr></thead>';
+
+    let tbody = '<tbody>';
+    for (let i = 0; i < showRows; i++) {
+      tbody += `<tr><td class="row-idx">${i+1}</td>`;
+      for (let j = 0; j < showCols; j++) {
+        const v = matrix[i][j];
+        const range = colMaxs[j] - colMins[j];
+        const norm = range === 0 ? 0.5 : (v - colMins[j]) / range;
+        const cls = norm >= 0.75 ? 'heat-high' : norm <= 0.25 ? 'heat-low' : 'heat-mid';
+        tbody += `<td class="${cls}">${fmtNum(v)}</td>`;
+      }
+      if (p > MAX_COLS) tbody += `<td style="color:var(--text-faint)">…</td>`;
+      tbody += '</tr>';
+    }
+    tbody += '</tbody>';
+
+    const wrap = document.getElementById('matrix-view-wrap');
+    wrap.innerHTML = `
+      <div class="matrix-scroll">
+        <table class="mx-table">${thead}${tbody}</table>
+      </div>
+      ${(n > MAX_ROWS || p > MAX_COLS)
+        ? `<div class="truncation-note">${[
+            n > MAX_ROWS ? `showing ${MAX_ROWS} of ${n} rows` : '',
+            p > MAX_COLS ? `showing ${MAX_COLS} of ${p} columns` : ''
+          ].filter(Boolean).join(' · ')} · all data used in calculations</div>`
+        : ''}`;
+
+    // Update notation cards
+    document.querySelector('#notation-cards .notation-card:first-child p:first-of-type').innerHTML =
+      `<span class="accent">X</span> — the full matrix, shape ${n}×${p}`;
+  }
+
+  // ── Step 3: Standardise ────────────────────────────────
+  function renderStandardiseSection() {
+    const { headers, matrix } = state;
+    const n = matrix.length, p = headers.length;
+
+    const colMeans = headers.map((_, j) => {
+      const col = matrix.map(r => r[j]);
+      return col.reduce((a,b)=>a+b,0)/col.length;
+    });
+    const colStds = headers.map((_, j) => {
+      const col = matrix.map(r => r[j]);
+      const m = colMeans[j];
+      return Math.sqrt(col.reduce((a,b)=>a+(b-m)**2,0)/(col.length-1));
+    });
+
+    state.Z = matrix.map(row => row.map((v,j) => (v - colMeans[j]) / colStds[j]));
+    state.stats = headers.map((_,j) => ({ mean: colMeans[j], std: colStds[j] }));
+
+    const MAX_SHOW = Math.min(n, 8), MAX_COLS = Math.min(p, 5);
+
+    document.getElementById('std-before-after-title').textContent =
+      `Before vs after — first ${MAX_SHOW} rows`;
+
+    function fmtRaw(v) {
+      if (Math.abs(v) >= 1000) return v.toLocaleString('en-GB', { maximumFractionDigits: 1 });
+      if (Math.abs(v) >= 10) return v.toFixed(2);
+      return v.toFixed(4);
+    }
+
+    const heatCls = v => v > 1 ? 'pos' : v < -1 ? 'neg' : 'zero';
+
+    const mkTable = (rows, isZ) => `
+      <table class="mini-table">
+        <thead><tr>
+          <th>#</th>
+          ${headers.slice(0,MAX_COLS).map(h=>`<th>${h}</th>`).join('')}
+          ${p > MAX_COLS ? '<th>…</th>' : ''}
+        </tr></thead>
+        <tbody>
+          ${rows.slice(0,MAX_SHOW).map((row,i)=>`
+            <tr>
+              <td>${i+1}</td>
+              ${row.slice(0,MAX_COLS).map(v=>
+                isZ
+                  ? `<td class="${heatCls(v)}">${v.toFixed(3)}</td>`
+                  : `<td>${fmtRaw(v)}</td>`
+              ).join('')}
+              ${p > MAX_COLS ? '<td>…</td>' : ''}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+
+    document.getElementById('std-panels').innerHTML = `
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">X — raw data</span>
+          <span class="panel-badge before">original scale</span>
+        </div>
+        <div class="panel-body">${mkTable(matrix, false)}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Z — standardised</span>
+          <span class="panel-badge after">μ=0, σ=1</span>
+        </div>
+        <div class="panel-body">${mkTable(state.Z, true)}</div>
+      </div>`;
+  }
+
+  // ── Step 4: Covariance ─────────────────────────────────
+  function renderCovarianceSection() {
+    const { headers, Z } = state;
+    const n = Z.length, p = headers.length;
+
+    // Compute C
+    const C = [];
+    for (let i = 0; i < p; i++) {
+      C[i] = [];
+      const ci = Z.map(r => r[i]);
+      for (let j = 0; j < p; j++) {
+        const cj = Z.map(r => r[j]);
+        C[i][j] = ci.reduce((s,v,k) => s + v*cj[k], 0) / (n - 1);
+      }
+    }
+    state.C = C;
+
+    document.getElementById('cov-shape-formula').innerHTML =
+      `C = (1 / (n−1)) · Zᵀ Z &nbsp;&nbsp; shape: ${p}×${p}`;
+
+    // Off-diagonal range for color scaling
+    let offMin = Infinity, offMax = -Infinity;
+    for (let i = 0; i < p; i++)
+      for (let j = 0; j < p; j++)
+        if (i !== j) { offMin = Math.min(offMin, C[i][j]); offMax = Math.max(offMax, C[i][j]); }
+
+    const heatColor = (v) => {
+      if (v >= 0) {
+        const t = Math.min(1, v / Math.max(offMax, 0.0001));
+        return `rgba(${Math.round(230+t*25)},${Math.round(158*t)},${Math.round(109*t)},${0.15+t*0.5})`;
+      } else {
+        const t = Math.min(1, Math.abs(v) / Math.max(Math.abs(offMin), 0.0001));
+        return `rgba(${Math.round(109*t)},${Math.round(191*t)},${Math.round(255*t)},${0.15+t*0.5})`;
+      }
     };
+
+    let thead = '<thead><tr><th></th>';
+    headers.forEach(h => { thead += `<th>${h}</th>`; });
+    thead += '</tr></thead>';
+
+    let tbody = '<tbody>';
+    for (let i = 0; i < p; i++) {
+      tbody += `<tr><td>${headers[i]}</td>`;
+      for (let j = 0; j < p; j++) {
+        const v = C[i][j];
+        const isDiag = i === j;
+        const bg = isDiag ? 'rgba(44,82,130,0.12)' : heatColor(v);
+        const diag = isDiag ? ' class="diagonal"' : '';
+        tbody += `<td${diag} style="background:${bg}" data-i="${i}" data-j="${j}" data-v="${v}">${v.toFixed(3)}</td>`;
+      }
+      tbody += '</tr>';
+    }
+    tbody += '</tbody>';
+
+    const wrap = document.getElementById('cov-table-wrap');
+    wrap.innerHTML = `<table class="cov-table">${thead}${tbody}</table>`;
+
+    // Tooltip
+    const tooltip = document.getElementById('tooltip');
+    const table = wrap.querySelector('.cov-table');
+    table.addEventListener('mousemove', e => {
+      const td = e.target.closest('td[data-v]');
+      if (!td) { tooltip.classList.remove('visible'); return; }
+      const i = +td.dataset.i, j = +td.dataset.j, v = +td.dataset.v;
+      const interp = i === j
+        ? `Variance of ${headers[i]} = ${v.toFixed(4)}`
+        : Math.abs(v) < 0.1 ? `${headers[i]} and ${headers[j]} are essentially uncorrelated`
+        : Math.abs(v) < 0.4 ? `Weak ${v>0?'positive':'negative'} relationship`
+        : Math.abs(v) < 0.7 ? `Moderate ${v>0?'positive':'negative'} covariance`
+        : `Strong ${v>0?'positive':'negative'} covariance`;
+      tooltip.innerHTML = `
+        <div class="tt-vars">${headers[i]} × ${headers[j]}</div>
+        <div class="tt-val">${v.toFixed(6)}</div>
+        <div class="tt-interp">${interp}</div>`;
+      tooltip.classList.add('visible');
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY - 10) + 'px';
+    });
+    table.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+  }
+
+  // ── Intercept section reveals to render content ─────────
+  const originalShowSection = showSection;
+  window.showSection = function(step) {
+    if (step === 3 && !state.Z) renderStandardiseSection();
+    if (step === 4 && !state.C) renderCovarianceSection();
+    originalShowSection(step);
+  };
+
+  // ── Helpers ────────────────────────────────────────────
+  function fmtNum(v) {
+    if (Math.abs(v) >= 1000) return v.toLocaleString('en-GB', { maximumFractionDigits: 1 });
+    if (Math.abs(v) >= 10)   return v.toFixed(2);
+    if (Math.abs(v) >= 0.01) return v.toFixed(4);
+    return v.toExponential(2);
   }
 </script>
 </body>
