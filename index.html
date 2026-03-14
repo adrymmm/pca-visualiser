@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCA Visualiser</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <style>
@@ -43,13 +43,11 @@
 
     .step-heading h2 {
       font-size: clamp(1.4rem, 3vw, 2rem);
-      font-weight: 400;
-      font-family: var(--mono);
-      letter-spacing: -0.02em;
+      font-weight: 600;
+      font-family: var(--serif);
+      letter-spacing: -0.01em;
       color: var(--text);
     }
-
-    .step-heading h2 span { color: var(--accent); font-style: italic; }
 
     /* Upload */
     .upload-zone {
@@ -91,7 +89,7 @@
 
     /* Notation cards */
     .notation-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 2.5rem; }
-    .notation-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 1.2rem; }
+    .notation-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 2px; padding: 1.2rem; }
     .notation-card h3 { font-size: 12px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; }
     .notation-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
     .notation-card .accent  { color: var(--accent); }
@@ -108,7 +106,7 @@
     .cov-table td:last-child { border-right: none; }
     .cov-table tr:last-child td { border-bottom: none; }
     .cov-table td:hover { filter: brightness(0.9); }
-    .cov-table td.diagonal { outline: 1.5px solid rgba(44,82,130,0.4); outline-offset: -1.5px; }
+    .cov-table td.diagonal { outline: 1.5px solid rgba(139,26,26,0.35); outline-offset: -1.5px; }
 
     .cov-tooltip {
       position: fixed; background: var(--bg-2); border: 1px solid var(--border-strong);
@@ -163,7 +161,7 @@
     .ev-bar-fill  { height: 100%; background: var(--accent); border-radius: 2px; }
     .ev-cum { color: var(--text-muted) !important; }
 
-    .scree-outer { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.5rem 0.8rem; margin-bottom: 2.5rem; }
+    .scree-outer { background: var(--bg-2); border: 1px solid var(--border); border-radius: 2px; padding: 1.2rem 1.5rem 0.8rem; margin-bottom: 2.5rem; }
     .scree-bars  { display: flex; align-items: flex-end; gap: 8px; height: 110px; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
     .scree-col   { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; justify-content: flex-end; }
     .scree-bar   { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.65; }
@@ -193,7 +191,7 @@
     .proj-table td:last-child  { border-right: none; }
     .proj-table tr:last-child td { border-bottom: none; }
 
-    .scatter-outer  { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 2.5rem; }
+    .scatter-outer  { background: var(--bg-2); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 2.5rem; }
     .scatter-header { padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--bg-3); font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
     .scatter-body   { padding: 0.5rem; }
 
@@ -248,9 +246,10 @@
 <div class="wrap">
 
   <header>
-    <div class="badge">Interactive</div>
-    <h1>Principal Component<br /><span>Analysis</span></h1>
-    <p class="subtitle">Upload your dataset and walk through PCA step by step — from raw data to eigenvectors, with your own numbers at every stage.</p>
+    <div class="badge">Technical exposition</div>
+    <h1>Principal Component Analysis</h1>
+
+    <p class="subtitle">A step-by-step derivation of PCA from the raw data matrix through to projection, with NumPy code at each stage.</p>
   </header>
 
   <nav class="steps-nav" id="steps-nav">
@@ -269,6 +268,9 @@
     <div class="step-item" data-step="5" onclick="scrollToStep(5)">
       <div class="step-num">5</div> Eigen decomp
     </div>
+    <div class="step-item" data-step="6" onclick="scrollToStep(6)">
+      <div class="step-num">6</div> Summary
+    </div>
   </nav>
 
   <!-- ═══════════════════════════════════════════════════ -->
@@ -284,6 +286,13 @@
       </svg>
       <div class="upload-label">Drop your CSV here, or click to browse</div>
       <div class="upload-hint">Comma-separated values · numeric columns required for PCA</div>
+    </div>
+
+    <div style="margin-top:1.2rem;font-family:var(--sans);font-size:12px;color:var(--text-muted)">
+      Or use a sample dataset:
+      <button class="toggle-btn" style="margin-left:8px" onclick="loadSample('iris')">Iris</button>
+      <button class="toggle-btn" onclick="loadSample('wine')">Wine quality</button>
+      <button class="toggle-btn" onclick="loadSample('body')">Body measurements</button>
     </div>
 
     <div id="upload-result" style="display:none">
@@ -302,38 +311,42 @@
     <hr class="section-sep" />
     <div class="step-heading">
       <div class="step-num-lg">2</div>
-      <h2>The data <span>matrix</span></h2>
+      <h2>The data matrix</h2>
     </div>
 
     <div class="explainer">
-      <h2>What is this matrix?</h2>
-      <p>Every row is one observation. Every column is one variable. Together they form the matrix <strong style="color:var(--text)">X</strong> — the starting point for PCA.</p>
+      <h2>The data matrix X</h2>
+      <p>Each row is one observation; each column is one variable. PCA finds directions in this p-dimensional space along which the data has maximum variance.</p>
       <div class="math" id="matrix-shape-formula">\[\mathbf{X} \in \mathbb{R}^{n \times p}\]</div>
-      <p>PCA finds new directions in this p-dimensional space that capture the most variance. But first — look at your raw numbers.</p>
     </div>
 
     <div class="section-title">Matrix X</div>
     <div id="matrix-view-wrap" style="margin-bottom:2.5rem"></div>
 
-    <div class="section-title">How to read this</div>
+    <div class="intuition">
+      <div class="intuition-label">Intuition</div>
+      <p>Think of this as a spreadsheet: rows are observations (countries, patients, experiments) and columns are things measured about them. PCA's job is to find which combinations of columns tend to move together, and to express those patterns as new, simpler axes.</p>
+    </div>
+
+    <div class="section-title">Notation</div>
     <div class="notation-row" id="notation-cards">
       <div class="notation-card">
         <h3>Notation</h3>
-        <p><span class="accent">X</span> — the full matrix, shape n×p</p>
-        <p><span class="accent">x<sub>ij</sub></span> — value at row <em>i</em>, column <em>j</em></p>
-        <p><span class="accent">x<sub>j</sub></span> — the j-th column (one variable across all observations)</p>
+        <p><span class="accent">X</span>: the full data matrix, shape n×p</p>
+        <p><span class="accent">x<sub>ij</sub></span>: value at row <em>i</em>, column <em>j</em></p>
+        <p><span class="accent">x<sub>j</sub></span>: the j-th column, one variable across all observations</p>
       </div>
       <div class="notation-card">
         <h3>Colour guide</h3>
-        <p><span style="color:#b8860b">Orange values</span> — high relative to that column's range</p>
-        <p style="margin-top:0.4rem"><span style="color:#2c5282">Blue values</span> — low relative to that column's range</p>
-        <p style="margin-top:0.6rem"><span class="success">Notice:</span> some columns may have much larger numbers than others — that's why standardisation matters.</p>
+        <p><span style="color:#b8860b">Orange</span>: high relative to that column's range</p>
+        <p style="margin-top:0.4rem"><span style="color:#2266aa">Blue</span>: low relative to that column's range</p>
+        <p style="margin-top:0.6rem">Columns with different scales will distort PCA; standardisation addresses this.</p>
       </div>
     </div>
 
     <div class="explainer">
-      <h2>Why we can't use this matrix directly</h2>
-      <p>PCA finds directions of maximum variance. If one column has values in the thousands and another in the single digits, PCA will be dominated by the large-scale column — not because it's more important, but because its numbers are bigger.</p>
+      <h2>Why standardisation is required</h2>
+      <p>PCA finds directions of maximum variance. If one column has values in the thousands and another in the single digits, PCA will be dominated by the large-scale column, not because it carries more information, but simply because its numerical range is larger.</p>
       <p>The fix is <strong style="color:var(--text)">standardisation</strong>: subtract the mean and divide by the standard deviation for each column. Every column ends up with mean 0 and standard deviation 1.</p>
       <div class="math">\[z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}\]</div>
     </div>
@@ -363,26 +376,31 @@
     <hr class="section-sep" />
     <div class="step-heading">
       <div class="step-num-lg">3</div>
-      <h2>Standard<span>isation</span></h2>
+      <h2>Standardisation</h2>
     </div>
 
     <div class="explainer">
-      <h2>Putting every variable on equal footing</h2>
+      <h2>Centering and scaling each variable</h2>
       <p>For each column <em>j</em>, we subtract its mean and divide by its standard deviation:</p>
       <div class="math">\[z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}\]</div>
       <p>After this transform, every column has <strong style="color:var(--text)">mean = 0</strong> and <strong style="color:var(--text)">std = 1</strong>. PCA can then measure variance fairly across all features.</p>
     </div>
 
-    <div class="section-title" id="std-before-after-title">Before vs after — first rows</div>
+    <div class="intuition">
+      <div class="intuition-label">Intuition</div>
+      <p>Suppose one column records annual salaries (tens of thousands) and another records age (tens). The salary column will appear to vary far more, purely because its numbers are larger. Standardisation converts every column into units of standard deviations above or below its mean, so PCA treats all variables on equal footing regardless of their original scale.</p>
+    </div>
+
+    <div class="section-title" id="std-before-after-title">Before and after: first rows</div>
     <div class="side-by-side" id="std-panels" style="margin-bottom:2.5rem"></div>
     <p style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:2.5rem;text-align:center">
       Orange = more than 1σ above mean &nbsp;·&nbsp; Blue = more than 1σ below mean &nbsp;·&nbsp; all values now dimensionless
     </p>
 
     <div class="explainer">
-      <h2>What we have now</h2>
-      <p>Matrix <strong style="color:var(--text)">Z</strong> — where every column has mean 0 and standard deviation 1. The data is now scale-invariant.</p>
-      <p>Next: we compute the <strong style="color:var(--text)">covariance matrix</strong> of Z — a p×p matrix that captures how much every pair of variables moves together. It's the heart of PCA.</p>
+      <h2>The standardised matrix Z</h2>
+      <p>Every column of Z has mean 0 and standard deviation 1. The data is now scale-invariant, and PCA can measure variance fairly across all variables.</p>
+      <p>The next step computes the <strong style="color:var(--text)">covariance matrix</strong> of Z: a p×p matrix recording how much each pair of variables moves together.</p>
       <div class="math">\[\Sigma = \frac{1}{n-1}\, Z^\top Z\]</div>
     </div>
 
@@ -413,7 +431,7 @@
     <hr class="section-sep" />
     <div class="step-heading">
       <div class="step-num-lg">4</div>
-      <h2>Covariance <span>matrix</span></h2>
+      <h2>Covariance matrix</h2>
     </div>
 
     <div class="explainer">
@@ -424,7 +442,12 @@
       <p>PCA will decompose this matrix into <strong style="color:var(--text)">eigenvectors</strong> (principal directions) and <strong style="color:var(--text)">eigenvalues</strong> (how much variance each direction explains).</p>
     </div>
 
-    <div class="section-title">Σ — covariance matrix (hover to inspect)</div>
+    <div class="intuition">
+      <div class="intuition-label">Intuition</div>
+      <p>This matrix records which pairs of measurements rise and fall together. Tall people tend to weigh more, so height and weight have positive covariance. Knowing these co-movements tells PCA where the interesting structure lies: directions that combine several correlated variables carry more information than any single variable alone.</p>
+    </div>
+
+    <div class="section-title">C: covariance matrix (hover to inspect)</div>
     <div class="cov-wrap" id="cov-table-wrap"></div>
     <div class="heatmap-legend">
       <span>negative covariance</span>
@@ -432,7 +455,7 @@
       <span>positive covariance</span>
       &nbsp;·&nbsp;
       <span style="color:var(--accent)">■</span>
-      <span>diagonal = variance (= 1 after standardisation)</span>
+      <span>diagonal: variance (= 1 after standardisation)</span>
     </div>
 
     <div class="section-title">How to read each cell</div>
@@ -445,7 +468,7 @@
       <div class="interp-card">
         <div class="interp-swatch" style="background:var(--bg-3);border:1px solid var(--border)"></div>
         <div class="interp-title">Near-zero covariance</div>
-        <div class="interp-body">The two variables are roughly independent — knowing one tells you little about the other.</div>
+        <div class="interp-body">The two variables are roughly independent; knowing one tells you little about the other.</div>
       </div>
       <div class="interp-card">
         <div class="interp-swatch" style="background:#ff9e6d"></div>
@@ -456,9 +479,9 @@
 
     <div class="explainer">
       <h2>Key properties of this matrix</h2>
-      <p><strong style="color:var(--text)">Symmetric</strong> — C[i,j] always equals C[j,i]. The covariance between height and weight is the same as between weight and height.</p>
-      <p><strong style="color:var(--text)">Positive semi-definite</strong> — all eigenvalues will be ≥ 0. This is why PCA always produces real, non-negative variance explained values.</p>
-      <p><strong style="color:var(--text)">Diagonal = 1</strong> — because we standardised. Without this, PCA would be dominated by whichever variable happens to have the largest scale.</p>
+      <p><strong style="color:var(--text)">Symmetric:</strong> C[i,j] = C[j,i] for all i, j. The covariance between any two variables is the same in either direction.</p>
+      <p><strong style="color:var(--text)">Positive semi-definite:</strong> all eigenvalues are ≥ 0, which guarantees that variance explained values are real and non-negative.</p>
+      <p><strong style="color:var(--text)">Diagonal = 1:</strong> a consequence of standardisation. Without it, PCA would be dominated by whichever variable has the largest numerical range.</p>
     </div>
 
     <details class="numpy-toggle">
@@ -483,18 +506,74 @@
     <hr class="section-sep" />
     <div class="step-heading">
       <div class="step-num-lg">5</div>
-      <h2>Eigen <span>decomposition</span></h2>
+      <h2>Eigen decomposition</h2>
     </div>
 
     <div class="explainer">
-      <h2>What comes next</h2>
-      <p>We decompose the covariance matrix C into its <strong style="color:var(--text)">eigenvectors</strong> and <strong style="color:var(--text)">eigenvalues</strong>:</p>
+      <h2>Spectral decomposition of C</h2>
+      <p>The covariance matrix C is decomposed into its <strong style="color:var(--text)">eigenvectors</strong> and <strong style="color:var(--text)">eigenvalues</strong>:</p>
       <div class="math">\[C = V \Lambda V^\top\]</div>
-      <p>Each eigenvector <strong style="color:var(--text)">v<sub>k</sub></strong> defines a principal component — a direction in your original p-dimensional space. The corresponding eigenvalue <strong style="color:var(--text)">λ<sub>k</sub></strong> tells you how much variance is explained in that direction.</p>
-      <p>The first principal component is the direction of greatest variance. The second is perpendicular to the first, and explains the next most variance — and so on. Together, a handful of components often capture the vast majority of the structure in your data.</p>
+      <p>Each eigenvector <strong style="color:var(--text)">v<sub>k</sub></strong> defines a principal component: a direction in the original p-dimensional feature space. The corresponding eigenvalue <strong style="color:var(--text)">λ<sub>k</sub></strong> gives the variance of the data projected onto that direction.</p>
+      <p>The eigenvectors are orthonormal and ordered by descending eigenvalue, so the first principal component is the direction of greatest variance, the second is orthogonal to it with the next greatest variance, and so on.</p>
+    </div>
+
+    <div class="intuition">
+      <div class="intuition-label">Intuition</div>
+      <p>Imagine casting a shadow of a cloud of points onto a wall by shining a torch from different angles. There is one angle where the shadow spreads out as much as possible: that direction is the first principal component. The second is perpendicular to the first and gives the next largest shadow. The eigenvalues measure how large each shadow is; the eigenvectors record which direction the torch was pointing.</p>
     </div>
 
     <div id="eigen-content"></div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- STEP 6: SUMMARY                                     -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <section id="s-6" class="page-section">
+    <hr class="section-sep" />
+    <div class="step-heading">
+      <div class="step-num-lg">6</div>
+      <h2>Summary</h2>
+    </div>
+
+    <div class="explainer">
+      <h2>The complete pipeline</h2>
+      <p>Starting from a raw data matrix, PCA proceeds through four operations:</p>
+      <ol style="margin:1rem 0 0.5rem 1.4rem;line-height:2.1;font-size:0.95rem;color:var(--text-muted)">
+        <li><strong style="color:var(--text)">Standardise</strong> each column to mean 0, standard deviation 1: \(z_{ij} = (x_{ij} - \mu_j)/\sigma_j\)</li>
+        <li><strong style="color:var(--text)">Compute the covariance matrix</strong> of the standardised data: \(C = \tfrac{1}{n-1}Z^\top Z\)</li>
+        <li><strong style="color:var(--text)">Eigen-decompose</strong> C into its eigenvectors and eigenvalues: \(C = V\Lambda V^\top\)</li>
+        <li><strong style="color:var(--text)">Project</strong> onto the top k eigenvectors: \(X_\text{pca} = ZW\) where W contains the first k columns of V</li>
+      </ol>
+      <p>The result is a lower-dimensional representation that retains as much variance as possible given the chosen k.</p>
+    </div>
+
+    <div class="intuition">
+      <div class="intuition-label">Intuition</div>
+      <p>The whole procedure is essentially finding the best angle from which to photograph a high-dimensional cloud of points, so that the resulting flat image loses as little information as possible.</p>
+    </div>
+
+    <div class="explainer">
+      <h2>Choosing k</h2>
+      <p>There is no universal rule, but two heuristics are in common use:</p>
+      <p><strong style="color:var(--text)">Elbow rule:</strong> examine the scree plot. Choose k at the point where the curve flattens, beyond which each additional component explains little further variance.</p>
+      <p><strong style="color:var(--text)">Cumulative variance threshold:</strong> select the smallest k such that the cumulative explained variance exceeds a target. A threshold of 80% is common in exploratory work; 95% or higher is often required for preprocessing before a predictive model.</p>
+      <p>These two approaches typically agree but not always. The right k also depends on the downstream purpose: for visualisation, k = 2 or 3 is natural; for dimensionality reduction before regression or classification, more components may be warranted.</p>
+    </div>
+
+    <div class="explainer">
+      <h2>Reading the loadings</h2>
+      <p>Each column of W expresses a principal component in terms of the original variables. A large positive loading on a variable means that variable contributes strongly in the positive direction to that component; a large negative loading means it contributes in the opposite direction.</p>
+      <p>Variables with loadings near zero on a component contribute little to it. When several variables have large loadings of the same sign on one component, that component often corresponds to a latent factor with a natural interpretation: a size factor in morphological data, or a market-wide risk factor in financial returns.</p>
+      <p>The sign of each principal component is arbitrary. Negating all loadings of a component produces an equally valid solution, so the direction of a component should be interpreted relative to other variables within that component, not in absolute terms.</p>
+    </div>
+
+    <div class="explainer">
+      <h2>Limitations</h2>
+      <p><strong style="color:var(--text)">Linearity:</strong> PCA finds linear combinations of the original variables. Non-linear structure (clusters arranged along a curve or manifold) will not be captured. Kernel PCA and manifold methods such as t-SNE or UMAP address this.</p>
+      <p><strong style="color:var(--text)">Sensitivity to outliers:</strong> the covariance matrix is based on squared deviations, so a small number of extreme observations can strongly influence the principal directions. Robust PCA variants exist for this case.</p>
+      <p><strong style="color:var(--text)">Interpretability:</strong> principal components are linear combinations of all original variables and often have no simple physical meaning. Rotation methods such as Varimax can improve interpretability at some cost to the variance-maximisation property.</p>
+      <p><strong style="color:var(--text)">Continuous data:</strong> PCA is designed for continuous numeric variables. Applied to binary or ordinal data it can give misleading results; correspondence analysis and multiple correspondence analysis are better suited to categorical data.</p>
+    </div>
   </section>
 
 </div>
@@ -502,6 +581,279 @@
 <div class="cov-tooltip" id="tooltip"></div>
 
 <script>
+  // ── Sample datasets ────────────────────────────────────
+  const SAMPLES = {
+    iris: {
+      name: 'Iris',
+      csv: `sepal_length,sepal_width,petal_length,petal_width
+5.1,3.5,1.4,0.2
+4.9,3.0,1.4,0.2
+4.7,3.2,1.3,0.2
+4.6,3.1,1.5,0.2
+5.0,3.6,1.4,0.2
+5.4,3.9,1.7,0.4
+4.6,3.4,1.4,0.3
+5.0,3.4,1.5,0.2
+4.4,2.9,1.4,0.2
+4.9,3.1,1.5,0.1
+5.4,3.7,1.5,0.2
+4.8,3.4,1.6,0.2
+4.8,3.0,1.4,0.1
+4.3,3.0,1.1,0.1
+5.8,4.0,1.2,0.2
+5.7,4.4,1.5,0.4
+5.4,3.9,1.3,0.4
+5.1,3.5,1.4,0.3
+5.7,3.8,1.7,0.3
+5.1,3.8,1.5,0.3
+5.4,3.4,1.7,0.2
+5.1,3.7,1.5,0.4
+4.6,3.6,1.0,0.2
+5.1,3.3,1.7,0.5
+4.8,3.4,1.9,0.2
+5.0,3.0,1.6,0.2
+5.0,3.4,1.6,0.4
+5.2,3.5,1.5,0.2
+5.2,3.4,1.4,0.2
+4.7,3.2,1.6,0.2
+4.8,3.1,1.6,0.2
+5.4,3.4,1.5,0.4
+5.2,4.1,1.5,0.1
+5.5,4.2,1.4,0.2
+4.9,3.1,1.5,0.2
+5.0,3.2,1.2,0.2
+5.5,3.5,1.3,0.2
+4.9,3.6,1.4,0.1
+4.4,3.0,1.3,0.2
+5.1,3.4,1.5,0.2
+5.0,3.5,1.3,0.3
+4.5,2.3,1.3,0.3
+4.4,3.2,1.3,0.2
+5.0,3.5,1.6,0.6
+5.1,3.8,1.9,0.4
+4.8,3.0,1.4,0.3
+5.1,3.8,1.6,0.2
+4.6,3.2,1.4,0.2
+5.3,3.7,1.5,0.2
+5.0,3.3,1.4,0.2
+7.0,3.2,4.7,1.4
+6.4,3.2,4.5,1.5
+6.9,3.1,4.9,1.5
+5.5,2.3,4.0,1.3
+6.5,2.8,4.6,1.5
+5.7,2.8,4.5,1.3
+6.3,3.3,4.7,1.6
+4.9,2.4,3.3,1.0
+6.6,2.9,4.6,1.3
+5.2,2.7,3.9,1.4
+5.0,2.0,3.5,1.0
+5.9,3.0,4.2,1.5
+6.0,2.2,4.0,1.0
+6.1,2.9,4.7,1.4
+5.6,2.9,3.6,1.3
+6.7,3.1,4.4,1.4
+5.6,3.0,4.5,1.5
+5.8,2.7,4.1,1.0
+6.2,2.2,4.5,1.5
+5.6,2.5,3.9,1.1
+5.9,3.2,4.8,1.8
+6.1,2.8,4.0,1.3
+6.3,2.5,4.9,1.5
+6.1,2.8,4.7,1.2
+6.4,2.9,4.3,1.3
+6.6,3.0,4.4,1.4
+6.8,2.8,4.8,1.4
+6.7,3.0,5.0,1.7
+6.0,2.9,4.5,1.5
+5.7,2.6,3.5,1.0
+5.5,2.4,3.8,1.1
+5.5,2.4,3.7,1.0
+5.8,2.7,3.9,1.2
+6.0,2.7,5.1,1.6
+5.4,3.0,4.5,1.5
+6.0,3.4,4.5,1.6
+6.7,3.1,4.7,1.5
+6.3,2.3,4.4,1.3
+5.6,3.0,4.1,1.3
+5.5,2.5,4.0,1.3
+5.5,2.6,4.4,1.2
+6.1,3.0,4.6,1.4
+5.8,2.6,4.0,1.2
+5.0,2.3,3.3,1.0
+5.6,2.7,4.2,1.3
+5.7,3.0,4.2,1.2
+5.7,2.9,4.2,1.3
+6.2,2.9,4.3,1.3
+5.1,2.5,3.0,1.1
+5.7,2.8,4.1,1.3
+6.3,3.3,6.0,2.5
+5.8,2.7,5.1,1.9
+7.1,3.0,5.9,2.1
+6.3,2.9,5.6,1.8
+6.5,3.0,5.8,2.2
+7.6,3.0,6.6,2.1
+4.9,2.5,4.5,1.7
+7.3,2.9,6.3,1.8
+6.7,2.5,5.8,1.8
+7.2,3.6,6.1,2.5
+6.5,3.2,5.1,2.0
+6.4,2.7,5.3,1.9
+6.8,3.0,5.5,2.1
+5.7,2.5,5.0,2.0
+5.8,2.8,5.1,2.4
+6.4,3.2,5.3,2.3
+6.5,3.0,5.5,1.8
+7.7,3.8,6.7,2.2
+7.7,2.6,6.9,2.3
+6.0,2.2,5.0,1.5
+6.9,3.2,5.7,2.3
+5.6,2.8,4.9,2.0
+7.7,2.8,6.7,2.0
+6.3,2.7,4.9,1.8
+6.7,3.3,5.7,2.1
+7.2,3.2,6.0,1.8
+6.2,2.8,4.8,1.8
+6.1,3.0,4.9,1.8
+6.4,2.8,5.6,2.1
+7.2,3.0,5.8,1.6
+7.4,2.8,6.1,1.9
+7.9,3.8,6.4,2.0
+6.4,2.8,5.6,2.2
+6.3,2.8,5.1,1.5
+6.1,2.6,5.6,1.4
+7.7,3.0,6.1,2.3
+6.3,3.4,5.6,2.4
+6.4,3.1,5.5,1.8
+6.0,3.0,4.8,1.8
+6.9,3.1,5.4,2.1
+6.7,3.1,5.6,2.4
+6.9,3.1,5.1,2.3
+5.8,2.7,5.1,1.9
+6.8,3.2,5.9,2.3
+6.7,3.3,5.7,2.5
+6.7,3.0,5.2,2.3
+6.3,2.5,5.0,1.9
+6.5,3.0,5.2,2.0
+6.2,3.4,5.4,2.3
+5.9,3.0,5.1,1.8`
+    },
+    wine: {
+      name: 'Wine quality',
+      csv: `fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur,total_sulfur,density,pH,sulphates,alcohol
+7.4,0.70,0.00,1.9,0.076,11,34,0.9978,3.51,0.56,9.4
+7.8,0.88,0.00,2.6,0.098,25,67,0.9968,3.20,0.68,9.8
+7.8,0.76,0.04,2.3,0.092,15,54,0.9970,3.26,0.65,9.8
+11.2,0.28,0.56,1.9,0.075,17,60,0.9980,3.16,0.58,9.8
+7.4,0.70,0.00,1.9,0.076,11,34,0.9978,3.51,0.56,9.4
+7.4,0.66,0.00,1.8,0.075,13,40,0.9978,3.51,0.56,9.4
+7.9,0.60,0.06,1.6,0.069,15,59,0.9964,3.30,0.46,9.4
+7.3,0.65,0.00,1.2,0.065,15,21,0.9946,3.39,0.47,10.0
+7.8,0.58,0.02,2.0,0.073,9,18,0.9968,3.36,0.57,9.5
+7.5,0.50,0.36,6.1,0.071,17,102,0.9978,3.35,0.80,10.5
+6.7,0.58,0.08,1.8,0.097,15,65,0.9959,3.28,0.54,9.2
+7.5,0.50,0.36,6.1,0.071,17,102,0.9978,3.35,0.80,10.5
+5.6,0.615,0.00,1.6,0.089,16,59,0.9943,3.58,0.52,9.9
+7.8,0.61,0.29,1.6,0.114,9,29,0.9974,3.26,1.56,9.1
+8.9,0.62,0.18,3.8,0.176,52,145,0.9986,3.16,0.88,9.2
+8.9,0.62,0.19,3.9,0.170,51,148,0.9986,3.17,0.93,9.2
+8.5,0.28,0.56,1.8,0.092,35,103,0.9969,3.30,0.75,10.5
+8.1,0.56,0.28,1.7,0.368,16,56,0.9968,3.11,1.28,9.3
+7.4,0.59,0.08,4.4,0.086,6,29,0.9974,3.38,0.50,9.0
+7.9,0.32,0.51,1.8,0.341,17,56,0.9969,3.04,1.08,9.2
+8.9,0.22,0.48,1.8,0.077,29,60,0.9968,3.39,0.53,9.4
+7.6,0.39,0.31,2.3,0.082,23,71,0.9982,3.52,0.65,9.7
+7.9,0.43,0.21,1.6,0.106,10,37,0.9966,3.17,0.91,9.5
+8.5,0.49,0.11,2.3,0.084,9,67,0.9968,3.17,0.53,9.4
+6.9,0.40,0.14,2.4,0.085,21,40,0.9968,3.43,0.63,9.7
+6.3,0.39,0.16,1.4,0.080,11,23,0.9955,3.34,0.56,9.3
+7.6,0.41,0.24,1.8,0.080,4,11,0.9962,3.28,0.59,9.5
+7.9,0.43,0.21,1.6,0.106,10,37,0.9966,3.17,0.91,9.5
+7.1,0.71,0.00,1.9,0.080,14,35,0.9972,3.47,0.55,9.4
+7.8,0.645,0.00,2.0,0.082,8,16,0.9964,3.38,0.59,9.8
+6.2,0.51,0.14,1.9,0.098,34,100,0.9940,3.56,0.72,10.3
+6.6,0.725,0.20,7.8,0.073,40,114,0.9980,3.26,0.54,9.1
+7.8,0.60,0.26,2.0,0.080,14,48,0.9972,3.25,0.79,9.5
+7.3,0.65,0.00,1.2,0.065,15,21,0.9946,3.39,0.47,10.0
+7.3,0.40,0.30,1.7,0.079,16,33,0.9982,3.56,0.51,9.2
+8.1,0.38,0.28,2.1,0.066,13,30,0.9968,3.23,0.73,9.7
+8.1,0.40,0.30,1.7,0.079,17,33,0.9982,3.56,0.51,9.2
+7.6,0.39,0.31,2.3,0.082,23,71,0.9982,3.52,0.65,9.7
+8.9,0.28,0.40,2.0,0.091,31,90,0.9982,3.30,0.84,9.7
+9.0,0.30,0.50,1.9,0.083,32,94,0.9984,3.28,0.87,9.7
+6.7,0.44,0.08,2.9,0.106,9,27,0.9959,3.45,0.65,9.7
+7.0,0.31,0.32,1.8,0.079,14,38,0.9962,3.31,0.64,9.8
+7.1,0.52,0.12,1.9,0.085,14,42,0.9964,3.32,0.57,9.6
+7.4,0.42,0.12,1.7,0.066,11,29,0.9959,3.36,0.68,9.7
+7.4,0.49,0.13,1.7,0.063,11,29,0.9959,3.35,0.65,9.7
+7.5,0.37,0.28,2.0,0.080,28,52,0.9970,3.35,0.74,9.8
+7.5,0.64,0.00,1.8,0.079,22,42,0.9958,3.20,0.48,10.0
+6.8,0.50,0.04,2.4,0.085,8,32,0.9952,3.45,0.80,10.0
+7.0,0.59,0.00,1.7,0.083,9,21,0.9970,3.48,0.58,9.3`
+    },
+    body: {
+      name: 'Body measurements',
+      csv: `height_cm,weight_kg,chest_cm,waist_cm,hip_cm,thigh_cm,forearm_cm,wrist_cm
+182,78,100,84,97,58,29,17
+165,62,88,72,93,52,26,16
+175,80,102,88,99,60,30,18
+158,55,84,68,90,50,25,15
+180,90,108,95,103,63,31,19
+170,68,94,78,96,55,28,16
+163,58,86,70,91,51,26,15
+177,82,104,86,98,59,29,17
+169,72,97,82,97,57,27,17
+185,95,112,98,105,65,32,19
+160,53,83,67,89,50,25,15
+173,75,99,83,98,58,29,17
+168,65,92,76,94,53,27,16
+178,84,105,88,100,60,30,18
+155,50,80,64,87,48,24,15
+183,88,109,93,102,62,31,18
+167,67,91,75,94,54,27,16
+172,76,100,84,98,57,28,17
+161,57,85,69,91,51,25,15
+179,85,106,89,101,61,30,18
+164,61,88,72,93,52,26,16
+176,79,102,86,99,59,29,17
+171,73,97,81,97,56,28,17
+186,97,114,100,106,66,32,19
+159,54,83,67,89,50,25,15
+174,77,101,85,99,58,29,17
+166,64,90,74,93,53,27,16
+181,89,109,94,103,63,31,18
+157,52,82,66,88,49,25,15
+177,83,104,87,100,60,30,17
+162,59,86,70,91,51,26,15
+170,70,95,79,96,55,28,16
+169,66,92,76,94,54,27,16
+184,93,112,97,104,64,31,19
+158,53,83,67,89,50,24,15
+175,78,101,84,98,58,29,17
+167,65,91,75,93,53,27,16
+180,87,107,91,102,62,31,18
+163,60,87,71,92,52,26,16
+173,74,98,82,97,57,28,17
+160,54,84,68,90,51,25,15
+182,90,110,95,103,63,31,18
+168,67,92,76,94,54,27,16
+177,82,104,87,100,60,30,17
+165,62,88,72,92,52,26,16
+179,86,107,90,101,61,30,18
+172,75,99,83,98,58,28,17
+185,96,113,99,105,65,32,19
+161,57,86,70,91,51,26,15
+176,80,102,85,99,59,29,17`
+    }
+  };
+
+  function loadSample(key) {
+    const sample = SAMPLES[key];
+    if (!sample) return;
+    const result = parseAndAnalyse(sample.csv);
+    renderUploadResult(result);
+    document.getElementById('upload-result').style.display = 'block';
+  }
+
   // ── State ──────────────────────────────────────────────
   const state = {};
   let maxVisibleStep = 1;
@@ -598,12 +950,16 @@
     const nums = numOk.map(parseFloat);
 
     // Name-based date detection even if parseable as number (e.g. year column "2020")
-    if (/^(date|time|timestamp|datetime|dt)$/i.test(lname)) return 'date';
+    if (/^(date|time|timestamp|datetime|dt|year|yr)$/i.test(lname)) return 'date';
     // Name-based index detection
     if (/^(index|idx|unnamed|rowid|row_id|row\.id|_c0)$/i.test(lname)) return 'index';
 
     const allInt = nums.every(v => Number.isInteger(v));
     if (allInt) {
+      // Value-based year detection: integers in [1000, 2100] with few unique values
+      const inYearRange = nums.every(v => v >= 1000 && v <= 2100);
+      if (inYearRange && new Set(nums).size <= 200) return 'date';
+
       // Sequential integers → row index
       const sorted = [...nums].sort((a, b) => a - b);
       const isSeq = sorted.length >= 2 && sorted.every((v, i) => i === 0 || v === sorted[i - 1] + 1);
@@ -751,7 +1107,7 @@
 
     // Update notation cards
     document.querySelector('#notation-cards .notation-card:first-child p:first-of-type').innerHTML =
-      `<span class="accent">X</span> — the full matrix, shape ${n}×${p}`;
+      `<span class="accent">X</span>: data matrix, shape ${n}×${p}`;
   }
 
   // ── Step 3: Standardise ────────────────────────────────
@@ -775,7 +1131,7 @@
     const MAX_SHOW = Math.min(n, 8), MAX_COLS = Math.min(p, 5);
 
     document.getElementById('std-before-after-title').textContent =
-      `Before vs after — first ${MAX_SHOW} rows`;
+      `Before and after: first ${MAX_SHOW} rows`;
 
     function fmtRaw(v) {
       if (Math.abs(v) >= 1000) return v.toLocaleString('en-GB', { maximumFractionDigits: 1 });
@@ -810,14 +1166,14 @@
     document.getElementById('std-panels').innerHTML = `
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">X — raw data</span>
+          <span class="panel-title">X: raw data</span>
           <span class="panel-badge before">original scale</span>
         </div>
         <div class="panel-body">${mkTable(matrix, false)}</div>
       </div>
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">Z — standardised</span>
+          <span class="panel-title">Z: standardised</span>
           <span class="panel-badge after">μ=0, σ=1</span>
         </div>
         <div class="panel-body">${mkTable(state.Z, true)}</div>
@@ -871,7 +1227,7 @@
       for (let j = 0; j < p; j++) {
         const v = C[i][j];
         const isDiag = i === j;
-        const bg = isDiag ? 'rgba(44,82,130,0.12)' : heatColor(v);
+        const bg = isDiag ? 'rgba(139,26,26,0.10)' : heatColor(v);
         const diag = isDiag ? ' class="diagonal"' : '';
         tbody += `<td${diag} style="background:${bg}" data-i="${i}" data-j="${j}" data-v="${v}">${v.toFixed(3)}</td>`;
       }
@@ -1028,8 +1384,8 @@
       </div>
       <div class="explainer" style="margin-bottom:2.5rem">
         <h2>What loadings tell you</h2>
-        <p>Each column is a principal component — a direction in your original ${p}-dimensional space. The value for each variable shows how much it contributes to that component.</p>
-        <p>A loading near ±1 means that variable strongly defines that component. Near 0 means it barely contributes. Each column is a unit vector and all columns are mutually orthogonal — this is the V in C = V Λ Vᵀ.</p>
+        <p>Each column is one principal component: a unit vector in the original ${p}-dimensional feature space. The entry for each variable is its loading, indicating how much that variable contributes to the component.</p>
+        <p>A loading near ±1 indicates that variable strongly defines that component; a loading near 0 indicates little contribution. The columns are mutually orthogonal, forming the matrix V in C = V Λ Vᵀ.</p>
       </div>`;
     content.appendChild(loadDiv);
 
@@ -1064,10 +1420,10 @@
     projDiv.innerHTML = `
       <div class="section-title">Project your data</div>
       <div class="explainer" style="margin-bottom:1.5rem">
-        <h2>From p dimensions to k</h2>
-        <p>Select the top k eigenvectors to form the p×k matrix W. The projected data is X_pca = ZW.</p>
+        <h2>Projection to k components</h2>
+        <p>Selecting the top k eigenvectors forms the p×k loadings matrix W. The projected data is then:</p>
         <div class="math">\\[\\mathbf{X}_{\\mathrm{pca}} = \\mathbf{Z}\\,\\mathbf{W} \\qquad (${Z.length}\\times k)\\]</div>
-        <p>Each row is one observation re-expressed in the new coordinate system of the principal components. You lose the dimensions that explain the least variance — but the structure of your data is largely preserved.</p>
+        <p>Each row is one observation expressed in the coordinate system of the principal components. The discarded components correspond to directions of minimal variance, so the projected representation retains the dominant structure of the original data.</p>
       </div>
       <div class="k-row">
         <span class="k-label">Keep k =</span>
@@ -1079,6 +1435,11 @@
     renderMath(content);
 
     selectK(defaultK);
+
+    const ctaDiv = document.createElement('div');
+    ctaDiv.className = 'cta-row';
+    ctaDiv.innerHTML = `<button class="btn btn-primary" onclick="showSection(6)">Proceed to summary →</button>`;
+    content.appendChild(ctaDiv);
   }
 
   function selectK(k) {
@@ -1094,11 +1455,23 @@
   }
 
   function renderProjectionOutput(k) {
-    const { Z, W } = state;
+    const { Z, W, eigenvalues } = state;
     const n = Z.length;
+    const numPCs = eigenvalues.length;
+
+    // Projected coordinates for the table (k components)
     const Xpca = Z.map(row =>
       Array.from({length: k}, (_, rank) => row.reduce((s, v, j) => s + v * W[j][rank], 0))
     );
+
+    // Always compute PC1 vs PC2 for the scatter (if at least 2 components exist)
+    const XpcaViz = numPCs >= 2
+      ? Z.map(row => [
+          row.reduce((s, v, j) => s + v * W[j][0], 0),
+          row.reduce((s, v, j) => s + v * W[j][1], 0)
+        ])
+      : null;
+
     const MAX_ROWS = 10;
     let tHead = '<tr><th>obs</th>';
     for (let r = 0; r < k; r++) tHead += `<th>PC${r+1}</th>`;
@@ -1111,13 +1484,13 @@
 
     const projOut = document.getElementById('proj-output');
     projOut.innerHTML = `
-      <div class="table-wrap" style="margin-bottom:${k === 2 ? '1.5rem' : '0'}">
+      <div class="table-wrap" style="margin-bottom:1.5rem">
         <table class="proj-table">
           <thead>${tHead}</thead>
           <tbody>${tBody}</tbody>
         </table>
       </div>
-      ${k === 2 ? renderScatterSVG(Xpca) : ''}`;
+      ${XpcaViz ? renderScatterSVG(XpcaViz) : ''}`;
     renderMath(projOut);
   }
 
@@ -1142,8 +1515,8 @@
     return `
       <div class="scatter-outer">
         <div class="scatter-header">
-          <span>PC1 vs PC2 — ${Xpca.length} observations in the new coordinate space</span>
-          <span style="color:var(--text-faint)">colour → PC1 value</span>
+          <span>PC1 vs PC2: ${Xpca.length} observations (first two components always shown)</span>
+          <span style="color:var(--text-faint)">colour by PC1 value</span>
         </div>
         <div class="scatter-body">
           <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
