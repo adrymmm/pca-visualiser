@@ -147,8 +147,11 @@
     .eigen-placeholder strong { color: var(--accent); }
 
     @media (max-width: 640px) {
-      .interp-row { grid-template-columns: 1fr; }
+      .interp-row   { grid-template-columns: 1fr; }
       .notation-row { grid-template-columns: 1fr; }
+      .k-row        { flex-wrap: wrap; }
+      /* Geometric illustration stacks vertically */
+      #geo-illustration > div[style] { grid-template-columns: 1fr !important; }
     }
 
     /* ── Section 5: Eigen-decomposition ── */
