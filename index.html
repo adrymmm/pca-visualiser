@@ -1029,9 +1029,10 @@
         // Clear downstream state so stale results don't persist on re-upload
         delete state.Z; delete state.C; delete state.eigenvalues;
         delete state.W; delete state.varRatios;
-        document.getElementById('std-content').innerHTML   = '';
-        document.getElementById('cov-content').innerHTML   = '';
-        document.getElementById('eigen-content').innerHTML = '';
+        ['std-panels', 'cov-table-wrap', 'eigen-content'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = '';
+        });
         state.headers = numericCols.map(c => c.name);
         state.matrix  = cleanRows.map(r => numericCols.map(c => parseFloat(r[c.idx])));
         renderMatrixSection();
