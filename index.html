@@ -1463,7 +1463,7 @@
     // ── Scree plot ──
     const maxEv = state.eigenvalues[0];
     const screeCols = state.eigenvalues.map((ev, rank) => {
-      const h = Math.round((ev / maxEv) * 100);
+      const h = Math.round((ev / maxEv) * 80);
       return `<div class="scree-col">
         <div class="scree-pct">${(state.varRatios[rank]*100).toFixed(1)}%</div>
         <div class="scree-bar" style="height:${h}px"></div>
