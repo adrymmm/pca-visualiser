@@ -503,7 +503,7 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════════ -->
-  <!-- STEP 5: EIGEN DECOMPOSITION (placeholder)           -->
+  <!-- STEP 5: EIGEN DECOMPOSITION                         -->
   <!-- ═══════════════════════════════════════════════════ -->
   <section id="s-5" class="page-section">
     <hr class="section-sep" />
@@ -986,7 +986,21 @@
       return;
     }
 
-    const { n, numericCols, droppedCols } = data;
+    const COL_CAP = 50;
+    let { n, numericCols, droppedCols } = data;
+    const cappedMsg = numericCols.length > COL_CAP
+      ? (() => {
+          // Keep top COL_CAP columns by variance
+          const colVars = numericCols.map(col => {
+            const vals = data.rows.map(r => parseFloat(r[col.idx])).filter(v => !isNaN(v));
+            const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+            return { col, variance: vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length };
+          });
+          colVars.sort((a, b) => b.variance - a.variance);
+          numericCols = colVars.slice(0, COL_CAP).map(x => x.col);
+          return `Dataset has ${data.numericCols.length} numeric columns. Showing the ${COL_CAP} with highest variance. Select fewer columns before uploading for full control.`;
+        })()
+      : null;
     const p = numericCols.length;
     const ok = p >= 2 && n >= 5;
     const cls  = ok ? 'ready' : 'not-ready';
@@ -994,7 +1008,7 @@
     const title = ok ? 'Dataset is ready for PCA' : 'Dataset is not suitable for PCA';
     const dropped = droppedCols.length;
     const body  = ok
-      ? `${p} numeric column${p !== 1 ? 's' : ''} · ${n} rows${dropped ? ` · ${dropped} column${dropped > 1 ? 's' : ''} excluded` : ''}`
+      ? `${p} numeric column${p !== 1 ? 's' : ''} · ${n} rows${dropped ? ` · ${dropped} column${dropped > 1 ? 's' : ''} excluded` : ''}${cappedMsg ? `<br><span style="color:var(--warn);font-size:0.85em">${cappedMsg}Add a column limit in your data to avoid this.</span>` : ''}`
       : `Need ≥ 2 numeric columns and ≥ 5 rows. Found ${p} usable numeric column${p !== 1 ? 's' : ''} and ${n} rows.`;
 
     const reasonLabel = { index: 'row index', id: 'ID column', date: 'date / time', not_numeric: 'non-numeric', constant: 'no variance' };
